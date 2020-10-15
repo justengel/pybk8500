@@ -11,6 +11,42 @@ Protocol found at https://bkpmedia.s3.amazonaws.com/downloads/manuals/en-us/85xx
 in the "Command details" section.
 
 
+Command Line Interface
+======================
+
+I added some command line interface utilities that use python's "-m" module switch.
+
+Requirements
+------------
+
+  * pyserial>=3.4
+  * continuous-threading>=2.0.0
+
+
+Send Command
+------------
+
+Send a command to a serial port and wait for a response.
+
+.. code-block:: bash
+
+    python -m pybk8500.send_cmd "COM1" 9600 "Command Status" --address 1
+    # will send the command down a serial port and wait for a response
+
+The command ID can be the string NAME or integer ID.
+
+.. code-block:: bash
+
+    # cmd_id as str
+    python -m pybk8500.send_cmd "COM1" 9600 "Command Status" --address 1
+
+    # cmd_id as hex
+    python -m pybk8500.send_cmd "COM1" 9600 0x12 --address 1
+
+    # cmd_id as decimal
+    python -m pybk8500.send_cmd "COM1" 9600 18 --address 1
+
+
 Parser
 ======
 

@@ -22,4 +22,15 @@ from pybk8500.commands import \
     ReadTimerValueForLoadOn, SetTimerStateLoadOn, ReadTimerStateLoadOn, SetCommunicationAddress, \
     SetLocalControlState, SetRemoteSensingState, ReadRemoteSensingState, SelectTriggerSource, \
     ReadTriggerSource, TriggerElectronicLoad, SaveDCLoadSettings, RecallDCLoadSettings, SelectFunctionType, \
-    GetFunctionType, ReadInputVoltageCurrentPowerState, GetProductInfo, ReadBarCode \
+    GetFunctionType, ReadInputVoltageCurrentPowerState, GetProductInfo, ReadBarCode
+
+
+try:
+    from pybk8500.send_cmd import ComManager
+except (ImportError, Exception) as err:
+    class ComManager(object):
+        error = err
+
+        def __new__(cls, *args, **kwargs):
+            raise EnvironmentError('Missing dependent "pyserial" or "continuous_threading" library! {}'
+                                   .format(cls.error)) from cls.error

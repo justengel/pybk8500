@@ -78,8 +78,11 @@ if __name__ == "__main__":
           # options to install extra requirements
           install_requires=[
               'dynamicmethod>=1.0.4',
+              'bitflags>=1.0.6',
               ],
           extras_require={
+              'serial': ['pyserial>=3.4', 'continuous-threading>=2.0.0'],  # pip install pybk8500[serial]
+              'all': ['pyserial>=3.4', 'continuous-threading>=2.0.0'],  # pip install pybk8500[all]
               },
 
           # entry_points={
