@@ -106,6 +106,11 @@ class Parser(object):
         return msg
 
     @staticmethod
+    def message_parsed(msg):
+        """Default "parse" callback function if one is not given."""
+        print(msg)
+
+    @staticmethod
     def error(error):
         """Callback to indicate that an error happened.
 
@@ -114,16 +119,19 @@ class Parser(object):
         """
         print('{}: {}'.format(type(error).__name__, error), file=sys.stderr)
 
-    def parse(self,  byts, callback):
+    def parse(self,  byts, callback=None):
         """Parse the messages in the given bytes use the given callback to use the messages.
 
         Args:
             byts (bytes): Data to handle
-            callback (function): Function that takes in a parsed message when the message is parsed.
+            callback (function)[None]: Function that takes in a parsed message when the message is parsed.
 
         Returns:
             buffer (bytes): Unused bytes
         """
+        if callback is None:
+            callback = self.message_parsed
+
         for msg, remain in self.parse_iter(byts):
             callback(msg)
 
