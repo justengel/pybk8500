@@ -42,20 +42,18 @@ class Message(bytearray):
     address = Int8Field('address', 1)
     command = Int8Field('command', 2)
 
-    checksum = Int8Field('checksum', 25)  # Last byte in message
-
-    @checksum.getter
     def get_checksum(self):
         """Return the checksum for the message."""
         if self.checksum_needs_updating:
             self.update_checksum()
         return self[25]
 
-    @checksum.setter
     def set_checksum(self, value):
         """Set the checksum for the message."""
         self[25] = value
         self.checksum_needs_updating = False
+
+    checksum = Int8Field('checksum', 25, fget=get_checksum, fset=set_checksum)  # Last byte in message
 
     @staticmethod
     def calc_checksum(byts):
@@ -140,7 +138,9 @@ class Message(bytearray):
     def __bytes__(self):
         if self.checksum_needs_updating:
             self.update_checksum()
-        return bytes(self)
+
+        # bytearray has no super().__bytes___() I'm guessing most efficient is iter
+        return bytes(iter(self))
 
 
 @Parser.add_lookup
