@@ -34,6 +34,8 @@ class Message(bytearray):
     ID = 0
     NAME = 'Base Command'
 
+    RESPONSE_TYPE = None
+
     MSG_LENGTH = 26
 
     # constant = Int8Field('constant', 0)  # Manually set and is not needed
@@ -87,6 +89,11 @@ class Message(bytearray):
                 fields[name] = get_value(name)
 
         return fields
+
+    @classmethod
+    def set_response_type(cls, msg_cls):
+        cls.RESPONSE_TYPE = msg_cls
+        return msg_cls
 
     def __init__(self, raw=None, address=None, **kwargs):
         self.checksum_needs_updating = False
@@ -197,6 +204,7 @@ class SetMaxVoltage(Message):
 
 
 @Parser.add_lookup
+@SetMaxVoltage.set_response_type
 class ReadMaxVoltage(SetMaxVoltage):
     """Read the maximum voltage allowed"""
     ID = 0x23
@@ -214,6 +222,7 @@ class SetMaxCurrent(Message):
 
 
 @Parser.add_lookup
+@SetMaxVoltage.set_response_type
 class ReadMaxCurrent(SetMaxCurrent):
     """Read the maximum current allowed"""
     ID = 0x25
@@ -231,6 +240,7 @@ class SetMaxPower(Message):
 
 
 @Parser.add_lookup
+@SetMaxPower.set_response_type
 class ReadMaxPower(SetMaxPower):
     """Read the maximum current allowed"""
     ID = 0x27
@@ -256,6 +266,7 @@ class SetMode(Message):
 
 
 @Parser.add_lookup
+@SetMode.set_response_type
 class ReadMode(SetMode):
     """Read the mode being used (CC, CV, CW, or CR)"""
     ID = 0x29
@@ -273,6 +284,7 @@ class SetCCModeCurrent(Message):
 
 
 @Parser.add_lookup
+@SetCCModeCurrent.set_response_type
 class ReadCCModeCurrent(SetCCModeCurrent):
     """Read CC mode current"""
     ID = 0x2B
@@ -290,6 +302,7 @@ class SetCVModeVoltage(Message):
 
 
 @Parser.add_lookup
+@SetCVModeVoltage.set_response_type
 class ReadCVModeVoltage(SetCVModeVoltage):
     """Read CV mode voltage"""
     ID = 0x2D
@@ -307,6 +320,7 @@ class SetCWModePower(Message):
 
 
 @Parser.add_lookup
+@SetCWModePower.set_response_type
 class ReadCWModePower(SetCWModePower):
     """Read CW mode power"""
     ID = 0x2F
@@ -324,6 +338,7 @@ class SetCRModeResistance(Message):
 
 
 @Parser.add_lookup
+@SetCRModeResistance.set_response_type
 class ReadCRModeResistance(SetCRModeResistance):
     """Read CR mode resistance"""
     ID = 0x31
@@ -368,6 +383,7 @@ class SetCCModeTransientCurrentAndTiming(Message):
 
 
 @Parser.add_lookup
+@SetCCModeTransientCurrentAndTiming.set_response_type
 class ReadCCModeTransientParameters(SetCCModeTransientCurrentAndTiming):
     """Read CC mode transient parameters"""
     ID = 0x33
@@ -404,6 +420,7 @@ class SetCVModeTransientVoltageAndTiming(Message):
 
 
 @Parser.add_lookup
+@SetCVModeTransientVoltageAndTiming.set_response_type
 class ReadCVModeTransientParameters(SetCVModeTransientVoltageAndTiming):
     """Read CV mode transient parameters"""
     ID = 0x35
@@ -440,6 +457,7 @@ class SetCWModeTransientPowerAndTiming(Message):
 
 
 @Parser.add_lookup
+@SetCWModeTransientPowerAndTiming.set_response_type
 class ReadCWModeTransientParameters(SetCWModeTransientPowerAndTiming):
     """Read CW mode transient parameters"""
     ID = 0x37
@@ -476,6 +494,7 @@ class SetCRModeTransientResistanceAndTiming(Message):
 
 
 @Parser.add_lookup
+@SetCRModeTransientResistanceAndTiming.set_response_type
 class ReadCRModeTransientParameters(SetCRModeTransientResistanceAndTiming):
     """Read CR mode transient parameters"""
     ID = 0x39
@@ -499,6 +518,7 @@ class SelectListOperation(Message):
 
 
 @Parser.add_lookup
+@SelectListOperation.set_response_type
 class ReadListOperation(SelectListOperation):
     """Read the list operation (CC/CV/CW/CR)"""
     ID = 0x3B
@@ -521,6 +541,7 @@ class SetHowListsRepeat(Message):
 
 
 @Parser.add_lookup
+@SetHowListsRepeat.set_response_type
 class ReadHowListsRepeat(SetHowListsRepeat):
     """Read how lists repeat (ONCE or REPEAT)"""
     ID = 0x3D
@@ -539,6 +560,7 @@ class SetNumberOfSteps(Message):
 
 
 @Parser.add_lookup
+@SetNumberOfSteps.set_response_type
 class ReadNumberOfSteps(SetNumberOfSteps):
     """Read the number of list steps"""
     ID = 0x3F
@@ -556,12 +578,14 @@ class SetOneStepCurrentAndTime(Message):
 
     # 5 to 8 4 byte little-endian integer specifying the current in units of 0.1 mA
     current = ScalarFloatField('current', 5, length=4, scalar=10000)  # 0.1 mA
+    value = current  # Alias so Message(value=1) can be used
 
     # 9 to 10 2 byte little-endian integer specifying the step timing in units of 0.1 ms
     time = ScalarFloatField('time', 9, length=2, scalar=10000)  # 0.1 ms
 
 
 @Parser.add_lookup
+@SetOneStepCurrentAndTime.set_response_type
 class ReadOneStepCurrentAndTime(SetOneStepCurrentAndTime):
     """Read one of the step's current and time values"""
     ID = 0x41
@@ -579,12 +603,14 @@ class SetOneStepVoltageAndTime(Message):
 
     # 5 to 8 4 byte little-endian integer specifying the voltage in units of 1 mV
     voltage = ScalarFloatField('voltage', 5, length=4, scalar=1000)  # 1 mV
+    value = voltage  # Alias so Message(value=1) can be used
 
     # 9 to 10 2 byte little-endian integer specifying the step timing in units of 0.1 ms
     time = ScalarFloatField('time', 9, length=2, scalar=10000)  # 0.1 ms
 
 
 @Parser.add_lookup
+@SetOneStepVoltageAndTime.set_response_type
 class ReadOneStepVoltageAndTime(SetOneStepVoltageAndTime):
     """Read one of the step's voltage and time values"""
     ID = 0x43
@@ -602,12 +628,14 @@ class SetOneStepPowerAndTime(Message):
 
     # 5 to 8 4 byte little-endian integer specifying the power in units of 1 mW
     power = ScalarFloatField('power', 5, length=4, scalar=1000)  # 1 mV
+    value = power  # Alias so Message(value=1) can be used
 
     # 9 to 10 2 byte little-endian integer specifying the step timing in units of 0.1 ms
     time = ScalarFloatField('time', 9, length=2, scalar=10000)  # 0.1 ms
 
 
 @Parser.add_lookup
+@SetOneStepPowerAndTime.set_response_type
 class ReadOneStepPowerAndTime(SetOneStepPowerAndTime):
     """Read one of the step's power and time values"""
     ID = 0x45
@@ -625,12 +653,14 @@ class SetOneStepResistanceAndTime(Message):
 
     # 5 to 8 4 byte little-endian integer specifying the resistance in units of 1 m Ohm
     resistance = ScalarFloatField('resistance', 5, length=4, scalar=1000)  # 1 mV
+    value = resistance  # Alias so Message(value=1) can be used
 
     # 9 to 10 2 byte little-endian integer specifying the step timing in units of 0.1 ms
     time = ScalarFloatField('time', 9, length=2, scalar=10000)  # 0.1 ms
 
 
 @Parser.add_lookup
+@SetOneStepResistanceAndTime.set_response_type
 class ReadOneStepResistanceAndTime(SetOneStepResistanceAndTime):
     """Read one of the step's resistance and time values"""
     ID = 0x47
@@ -649,6 +679,7 @@ class SetListFileName(Message):
 
 
 @Parser.add_lookup
+@SetListFileName.set_response_type
 class ReadListFileName(SetListFileName):
     """Read the list file name"""
     ID = 0x49
@@ -674,6 +705,7 @@ class SetMemoryPartition(Message):
 
 
 @Parser.add_lookup
+@SetMemoryPartition.set_response_type
 class ReadMemoryPartition(SetMemoryPartition):
     """Read the memory partitioning for storing list steps"""
     ID = 0x4B
@@ -693,6 +725,7 @@ class SaveListFile(Message):
 
 
 @Parser.add_lookup
+@SaveListFile.set_response_type
 class RecallListFile(SaveListFile):
     """Recall the list file"""
     ID = 0x4D
@@ -711,6 +744,7 @@ class SetMinimumVoltage(Message):
 
 
 @Parser.add_lookup
+@SetMinimumVoltage.set_response_type
 class ReadMinimumVoltage(SetMinimumVoltage):
     """Read minimum voltage in battery testing"""
     ID = 0x4F
@@ -729,6 +763,7 @@ class SetTimerValueForLoadOn(Message):
 
 
 @Parser.add_lookup
+@SetTimerValueForLoadOn.set_response_type
 class ReadTimerValueForLoadOn(SetTimerValueForLoadOn):
     """Read timer value for LOAD ON"""
     ID = 0x51
@@ -752,6 +787,7 @@ class SetTimerStateLoadOn(Message):
 
 
 @Parser.add_lookup
+@SetTimerStateLoadOn.set_response_type
 class ReadTimerStateLoadOn(SetTimerStateLoadOn):
     """Read timer state for LOAD ON"""
     ID = 0x53
@@ -802,6 +838,7 @@ class SetRemoteSensingState(Message):
 
 
 @Parser.add_lookup
+@SetRemoteSensingState.set_response_type
 class ReadRemoteSensingState(SetRemoteSensingState):
     """Read the state of remote sensing"""
     ID = 0x57
@@ -827,6 +864,7 @@ class SelectTriggerSource(Message):
 
 
 @Parser.add_lookup
+@SelectTriggerSource.set_response_type
 class ReadTriggerSource(SelectTriggerSource):
     """Read trigger source"""
     ID = 0x59
@@ -848,10 +886,11 @@ class SaveDCLoadSettings(Message):
 
     # Storage register, a number between 1 and 25 inclusive
     storage_register = Int8Field('storage_register', 3)
-    value = storage_register
+    value = storage_register  # Alias so Message(value=1) can be used
 
 
 @Parser.add_lookup
+@SaveDCLoadSettings.set_response_type
 class RecallDCLoadSettings(SaveDCLoadSettings):
     """Recall DC Load's settings"""
     ID = 0x5C
@@ -879,6 +918,7 @@ class SelectFunctionType(Message):
 
 
 @Parser.add_lookup
+@SelectFunctionType.set_response_type
 class GetFunctionType(SelectFunctionType):
     """Get function type (FIXED/SHORT/TRAN/LIST/BATTERY)"""
     ID = 0x5E
