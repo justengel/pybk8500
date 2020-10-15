@@ -257,8 +257,10 @@ class FloatField(Field):
         byts = obj[self.index: self.index + self.length]
         if self.length == 4:
             value = struct.unpack('<f', byts)
-        else:
+        elif self.length == 8:
             value = struct.unpack('<d', byts)
+        else:
+            value = self.to_bytes(byts, length=self.length, byteorder=self.byteorder, signed=self.signed)
 
         if self.get_converter:
             return self.get_converter(value, value)
@@ -296,8 +298,11 @@ class ScalarFloatField(FloatField):
             fdel (callable/function)[None]: Function to override which deletes the value.
             doc (str)[None]: Property docstring.
         """
-        super().__init__(name, index, length, byteorder, signed, get_converter, set_converter,
-                         fget, fset, fdel, doc)
+        try:
+            super().__init__(name, index, length, byteorder, signed, get_converter, set_converter,
+                             fget, fset, fdel, doc)
+        except ValueError:
+            pass  # Ignore length only being 2 or 4 value error
 
         if scalar is None:
             scalar = self.DEFAULT_SCALAR
