@@ -53,10 +53,18 @@ class Field(object):
 
         if fget is None:
             fget = self.get_value
-            fget.__doc__ = "Return the {} value for message position {}".format(name, index)
+            if doc is None:
+                doc = "Return the {} value for message position {}".format(name, index)
+            try:
+                fget.__doc__ = "Return the {} value for message position {}".format(name, index)
+            except (AttributeError, Exception):
+                pass
         if fset is None:
             fset = self.set_value
-            fset.__doc__ = "Set the {} value for message position {}".format(name, index)
+            try:
+                fset.__doc__ = "Set the {} value for message position {}".format(name, index)
+            except (AttributeError, Exception):
+                pass
         if doc is None and fget is not None:
             doc = fget.__doc__
 
