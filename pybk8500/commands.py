@@ -10,7 +10,7 @@ from pybk8500.parser import Parser
 
 
 __all__ = [
-    'Message',
+    'Message', 'CC_Commands', 'CV_Commands', 'CW_Commands', 'CR_Commands',
     'CommandStatus', 'SetRemoteOperation', 'LoadSwitch', 'SetMaxVoltage', 'ReadMaxVoltage', 'SetMaxCurrent',
     'ReadMaxCurrent', 'SetMaxPower', 'ReadMaxPower', 'SetMode', 'ReadMode', 'SetCCModeCurrent', 'ReadCCModeCurrent',
     'SetCVModeVoltage', 'ReadCVModeVoltage', 'SetCWModePower', 'ReadCWModePower', 'SetCRModeResistance',
@@ -1003,3 +1003,20 @@ class ReadBarCode(Message):
 
     # 10 to 11 Year
     year = StrField('year', 10, length=2)
+
+
+CC_Commands = {'value': SetCCModeCurrent,
+               'transient': SetCCModeTransientCurrentAndTiming,
+               'step': SetOneStepCurrentAndTime,}
+
+CV_Commands = {'value': SetCVModeVoltage,
+               'transient': SetCVModeTransientVoltageAndTiming,
+               'step': SetOneStepVoltageAndTime,}
+
+CW_Commands = {'value': SetCWModePower,
+               'transient': SetCWModeTransientPowerAndTiming,
+               'step': SetOneStepPowerAndTime,}
+
+CR_Commands = {'value': SetCRModeResistance,
+               'transient': SetCRModeTransientResistanceAndTiming,
+               'step': SetOneStepResistanceAndTime,}

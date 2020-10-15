@@ -7,7 +7,7 @@ from pybk8500.parser import ChecksumError, MessageTypeError, Parser
 #     IntField, Int8Field, Int16Field, Int32Field, FloatField, ScalarFloatField
 
 from pybk8500.commands import \
-    Message, \
+    Message, CC_Commands, CV_Commands, CW_Commands, CR_Commands, \
     CommandStatus, SetRemoteOperation, LoadSwitch, SetMaxVoltage, ReadMaxVoltage, SetMaxCurrent, \
     ReadMaxCurrent, SetMaxPower, ReadMaxPower, SetMode, ReadMode, SetCCModeCurrent, ReadCCModeCurrent, \
     SetCVModeVoltage, ReadCVModeVoltage, SetCWModePower, ReadCWModePower, SetCRModeResistance, \
