@@ -72,6 +72,16 @@ class CommunicationManager(object):
         if len(self.response_types) == 0 or any(isinstance(msg, rtype) for rtype in self.response_types):
             self.msg_list.append(msg)
 
+    @contextlib.contextmanager
+    def change_message_parsed(self, callback):
+        """Change the message parsed function while in this with block."""
+        old = self.message_parsed
+        self.message_parsed = callback
+
+        yield
+
+        self.message_parsed = old
+
     @staticmethod
     def error(error):
         """Callback to indicate that an error happened.
