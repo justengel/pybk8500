@@ -11,8 +11,9 @@ from pybk8500.parser import Parser
 
 __all__ = [
     'Message', 'CC_Commands', 'CV_Commands', 'CW_Commands', 'CR_Commands',
-    'CommandStatus', 'SetRemoteOperation', 'LoadSwitch', 'SetMaxVoltage', 'ReadMaxVoltage', 'SetMaxCurrent',
-    'ReadMaxCurrent', 'SetMaxPower', 'ReadMaxPower', 'SetMode', 'ReadMode',
+    'CommandStatus', 'SetRemoteOperation', 'RemoteOn', 'RemoteOff', 'LoadSwitch', 'LoadOn', 'LoadOff',
+    'SetMaxVoltage', 'ReadMaxVoltage', 'SetMaxCurrent', 'ReadMaxCurrent', 'SetMaxPower', 'ReadMaxPower',
+    'SetMode', 'ReadMode',
     'CC', 'SetCCModeCurrent', 'ReadCCModeCurrent', 'SetModeCurrent', 'ReadModeCurrent',
     'CV', 'SetCVModeVoltage', 'ReadCVModeVoltage', 'SetModeVoltage', 'ReadModeVoltage',
     'CW', 'SetCWModePower', 'ReadCWModePower', 'SetModePower', 'ReadModePower',
@@ -158,7 +159,6 @@ class Message(bytearray):
         return self.__repr__()
 
 
-
 @Parser.add_lookup
 class CommandStatus(Message):
     """Indicates a return packet for a command sent to the DC Load"""
@@ -197,6 +197,24 @@ class SetRemoteOperation(Message):
     value = operation  # Alias so Message(value=1) can be used
 
 
+class RemoteOn(SetRemoteOperation):
+    NAME = 'Remote On'
+
+    def __init__(self, *args, **kwargs):
+        if 'value' not in kwargs and 'operation' not in kwargs:
+            kwargs['value'] = 1
+        super().__init__(*args, **kwargs)
+
+
+class RemoteOff(SetRemoteOperation):
+    NAME = 'Remote Off'
+
+    def __init__(self, *args, **kwargs):
+        if 'value' not in kwargs and 'operation' not in kwargs:
+            kwargs['value'] = 0
+        super().__init__(*args, **kwargs)
+
+
 @Parser.add_lookup
 class LoadSwitch(Message):
     """Load switch to turn the load on or off"""
@@ -210,6 +228,24 @@ class LoadSwitch(Message):
     operation.get_converter = SWITCH_VALUES.get
     operation.set_converter = SWITCH_NAMES.get
     value = operation  # Alias so Message(value=1) can be used
+
+
+class LoadOn(LoadSwitch):
+    NAME = 'Load On'
+
+    def __init__(self, *args, **kwargs):
+        if 'value' not in kwargs and 'operation' not in kwargs:
+            kwargs['value'] = 1
+        super().__init__(*args, **kwargs)
+
+
+class LoadOff(LoadSwitch):
+    NAME = 'Load Off'
+
+    def __init__(self, *args, **kwargs):
+        if 'value' not in kwargs and 'operation' not in kwargs:
+            kwargs['value'] = 0
+        super().__init__(*args, **kwargs)
 
 
 @Parser.add_lookup

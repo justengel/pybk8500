@@ -8,8 +8,9 @@ from pybk8500.parser import ChecksumError, MessageTypeError, Parser
 
 from pybk8500.commands import \
     Message, CC_Commands, CV_Commands, CW_Commands, CR_Commands, \
-    CommandStatus, SetRemoteOperation, LoadSwitch, SetMaxVoltage, ReadMaxVoltage, SetMaxCurrent, \
-    ReadMaxCurrent, SetMaxPower, ReadMaxPower, SetMode, ReadMode, \
+    CommandStatus, SetRemoteOperation, RemoteOn, RemoteOff, LoadSwitch, LoadOn, LoadOff, \
+    SetMaxVoltage, ReadMaxVoltage, SetMaxCurrent, ReadMaxCurrent, SetMaxPower, ReadMaxPower, \
+    SetMode, ReadMode, \
     CC, SetCCModeCurrent, ReadCCModeCurrent, SetModeCurrent, ReadModeCurrent, \
     CV, SetCVModeVoltage, ReadCVModeVoltage, SetModeVoltage, ReadModeVoltage, \
     CW, SetCWModePower, ReadCWModePower, SetModePower, ReadModePower, \
@@ -37,3 +38,16 @@ except (ImportError, Exception) as err:
         def __new__(cls, *args, **kwargs):
             raise EnvironmentError('Missing dependent "pyserial" or "continuous_threading" library! {}'
                                    .format(cls.error)) from cls.error
+
+try:
+    from pybk8500.run_profile import parse_number, ProfileManager, ProfileRow, Profile
+except (ImportError, Exception) as err:
+    class ProfileManager(object):
+        error = err
+
+        def __new__(cls, *args, **kwargs):
+            raise EnvironmentError(str(cls.error)) from cls.error
+
+    parse_number = ProfileManager
+    ProfileRow = ProfileManager
+    Profile = ProfileManager
