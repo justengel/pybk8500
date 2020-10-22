@@ -29,8 +29,10 @@ class CommunicationManager(object):
             parser = self.Parser()
         if connection is None:
             connection = serial.Serial()
-            connection.port = com
-            connection.baudrate = baudrate
+            if com is not None:
+                connection.port = com
+            if baudrate is not None:
+                connection.baudrate = baudrate
             # connection.rts = True  # Documentation states needed. Did not work
             # connection.dtr = True  # Documentation states needed. Did not work
 
@@ -114,7 +116,7 @@ class CommunicationManager(object):
             pass
         return False
 
-    def connect(self, com=None, baudrate=None):
+    def connect(self, com=None, baudrate=None, **kwargs):
         """Connect the connection/serial port."""
         if com is not None or baudrate is not None:
             self.disconnect()
@@ -128,7 +130,7 @@ class CommunicationManager(object):
             if isinstance(self.connection, serial.Serial):
                 self.connection.open()
 
-    def disconnect(self):
+    def disconnect(self, *args, **kwargs):
         """Disconnect the connection/serial port."""
         if isinstance(self.connection, serial.Serial):
             self.connection.close()
@@ -166,10 +168,13 @@ class CommunicationManager(object):
     def read_and_parse(self):
         """Read data from the connection and parse it."""
         try:
-            byts = self.read()
-            if byts:
-                self.parser.parse(byts, self.message_parsed)
-            time.sleep(self.read_delay)
+            if self.is_connected():
+                byts = self.read()
+                if byts:
+                    self.parser.parse(byts, self.message_parsed)
+                time.sleep(self.read_delay)
+            else:
+                time.sleep(0.1)
         except (ConnectionAbortedError, Exception) as err:
             print(str(err), file=sys.stderr)
 

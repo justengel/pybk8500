@@ -1,7 +1,9 @@
 Command,Value,Run Time (s)
-Com,Com1,0
-BaudRate,38400,0
 SampleRate,40.000,0
+BaudRate,38400,0
+Com,Com1,0
+RemoteOn,,
+LoadOff,,
 
 SetMaxCurrent,4.600,0
 SetMaxVoltage,25.000,0
@@ -23,3 +25,4 @@ SetMode,CC,0
 CC,0.001,0.100
 CC,0.300,10.000
 LoadOff,,
+RemoteOff,,

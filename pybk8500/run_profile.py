@@ -32,36 +32,38 @@ def parse_number(value):
     modifier = 1
     unit = ''
     try:
-        value, modifier, unit = value.split(' ', 2)
+        num, modifier, unit = value.split(' ', 2)
     except (ValueError, TypeError, Exception):
         try:
-            value, modifier = value.split(' ', 1)
+            num, modifier = value.split(' ', 1)
             modifier, unit = modifier[:-1], modifier[-1]  # Convert ms to m s
         except (ValueError, TypeError, Exception):
-            pass
+            num = value
 
     # Get the modifier
     modifier = UNIT_CONVERT.get(modifier, modifier)
 
     # Get the value
     try:
-        value = int(value)
+        num = int(num)
     except (ValueError, TypeError, Exception):
         try:
-            value = float(value)
+            num = float(num)
         except (ValueError, TypeError, Exception):
             pass
 
     # Convert the value to normal units
     try:
-        value = value * modifier
+        num = num * modifier
     except (ValueError, TypeError, Exception):
         pass
 
+    if not isinstance(num, str):
+        value = num
     return value, unit
 
 
-ProfileRow = namedtuple('ProfileRow', ['command', 'value', 'time'])
+ProfileRow = namedtuple('ProfileRow', ['command', 'value', 'timeout'])
 
 
 class Profile(list):
@@ -69,7 +71,7 @@ class Profile(list):
 
     ProfileRow = ProfileRow
     HEADER = 'Command,Value,Run Time (s)'
-    ROW_FORMAT = '{row.command},{row.value},{row.time}'
+    ROW_FORMAT = '{row.command},{row.value},{row.timeout}'
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -170,11 +172,13 @@ class ProfileManager(CommunicationManager):
 
     def __enter__(self):
         super().__enter__()
-        self.start_remote()
+        if self.is_connected():
+            self.start_remote()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.stop_remote()
+        if self.is_connected():
+            self.stop_remote()
         return super().__exit__(exc_type, exc_val, exc_tb)
 
     def __init__(self, connection=None, parser=None, com=None, baudrate=None, **kwargs):
@@ -278,7 +282,7 @@ class ProfileManager(CommunicationManager):
                     cmd(self, row.value, timeout=row.timeout)
             else:
                 cmd_type = getattr(commands, row.command)
-                if not isinstance(row.value, str):
+                if row.value or isinstance(row.value, int):
                     msg = cmd_type(value=row.value)
                 else:
                     msg = cmd_type()
@@ -292,22 +296,17 @@ class ProfileManager(CommunicationManager):
                     # Run and wait for messages
                     self.wait_print_input(row.timeout, self.sample_time)
 
-    @register_internal_command('SampleRate')
     def set_sample_rate(self, value, **kwargs):
         self.sample_time = 1/value
 
-    @register_internal_command('SampleTime')
     def set_sample_time(self, value, **kwargs):
         self.sample_time = value
 
-    @register_internal_command('BaudRate')
     def set_baudrate(self, value, **kwargs):
         with self.change_connection():
             self.connection.baudrate = value
 
-    @register_internal_command('Com')
-    @register_internal_command('Port')
-    def set_port(self, value, **kwargs):
+    def set_com(self, value, **kwargs):
         with self.change_connection():
             self.connection.port = value
 
@@ -317,6 +316,21 @@ class ProfileManager(CommunicationManager):
                 self._enter_connected = True
             except Exception as err:
                 print('Warning: Could not connect! {}'.format(err), file=sys.stderr)
+
+    set_port = set_com
+
+
+ProfileManager.register_internal_command('Connect', ProfileManager.connect)
+ProfileManager.register_internal_command('SampleRate', ProfileManager.set_sample_rate)
+ProfileManager.register_internal_command('SampleTime', ProfileManager.set_sample_time)
+ProfileManager.register_internal_command('BaudRate', ProfileManager.set_baudrate)
+ProfileManager.register_internal_command('Com', ProfileManager.set_com)
+ProfileManager.register_internal_command('Port', ProfileManager.set_port)
+
+
+@ProfileManager.register_internal_command('Print')
+def print_status(mngr, value, **kwargs):
+    print(value)
 
 
 def main(filename, out=None, com=None, baudrate=None):
