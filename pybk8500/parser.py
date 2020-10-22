@@ -91,7 +91,7 @@ class Parser(object):
              byts (bytes): Bytes to convert to a message object and call message_parsed with.
         """
         msg_id = byts[self.COMMAND_INDEX]
-        msg_type = self.lookup()
+        msg_type = self.lookup(msg_id)
         if msg_type is None:
             raise MessageTypeError('Invalid command type {}'.format(msg_id))
 
