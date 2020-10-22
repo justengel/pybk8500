@@ -26,9 +26,9 @@ from pybk8500.commands import \
 
 
 try:
-    from pybk8500.send_cmd import ComManager
+    from pybk8500.send_cmd import CommunicationManager
 except (ImportError, Exception) as err:
-    class ComManager(object):
+    class CommunicationManager(object):
         error = err
 
         def __new__(cls, *args, **kwargs):
