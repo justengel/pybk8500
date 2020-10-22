@@ -45,7 +45,7 @@ class CommunicationManager(object):
         for k, v in kwargs.items():
             setattr(self, k, v)
 
-        self.msg_list = []
+        self.ack_list = []
         self.response_types = []
         self.connection = connection
         self.set_parser(parser)
@@ -67,10 +67,12 @@ class CommunicationManager(object):
 
     parser = property(get_parser, set_parser)
 
-    def message_parsed(self, msg):
+    def save_ack(self, msg):
         """Save the response messages in the available response_types."""
         if len(self.response_types) == 0 or any(isinstance(msg, rtype) for rtype in self.response_types):
-            self.msg_list.append(msg)
+            self.ack_list.append(msg)
+
+    message_parsed = save_ack
 
     @contextlib.contextmanager
     def change_message_parsed(self, callback):
@@ -90,6 +92,18 @@ class CommunicationManager(object):
             error (Exception): Optional error object if applicable (C parsers do not create error objects).
         """
         print('{}: {}'.format(type(error).__name__, error), file=sys.stderr)
+
+    @contextlib.contextmanager
+    def change_connection(self):
+        """Change the connection properties safely."""
+        is_connected = self.is_connected()
+        if is_connected:
+            self.disconnect()
+
+        yield
+
+        if is_connected:
+            self.connect()
 
     def is_connected(self):
         """Return if the connection/serial port is connected."""
@@ -121,7 +135,7 @@ class CommunicationManager(object):
 
     def flush(self):
         """Clear the message buffer and input buffer."""
-        self.msg_list.clear()
+        self.ack_list.clear()
         try:
             self.connection.flush()
         except (AttributeError, Exception):
@@ -153,7 +167,7 @@ class CommunicationManager(object):
         """Read data from the connection and parse it."""
         try:
             byts = self.read()
-            if len(byts) > 0:
+            if byts:
                 self.parser.parse(byts, self.message_parsed)
             time.sleep(self.read_delay)
         except (ConnectionAbortedError, Exception) as err:
@@ -223,12 +237,12 @@ class CommunicationManager(object):
         """
         start = time.time()
         while (time.time() - start) < timeout:
-            if (msg_type is None and len(self.msg_list) > 0) or any(isinstance(msg, msg_type) for msg in self.msg_list):
+            if (msg_type is None and len(self.ack_list) > 0) or any(isinstance(msg, msg_type) for msg in self.ack_list):
                 return True
             time.sleep(self.wait_delay)
         return False
 
-    def send_wait(self, msg, timeout, msg_type=None, attempts=3, print_msg=True, print_recv=True):
+    def send_wait(self, msg, timeout=0, msg_type=None, attempts=3, print_msg=True, print_recv=True):
         """Send a message and wait for a response.
 
         Args:
@@ -240,7 +254,7 @@ class CommunicationManager(object):
             print_recv (bool)[True]: If True print all received messages.
 
         Returns:
-            msg_list (list): List of received messages.
+            ack_list (list): List of received messages.
         """
         with self.listen_for_messages(msg_type):
             trials = 0
@@ -254,12 +268,12 @@ class CommunicationManager(object):
                 pout = 'Retry sending {} ...'.format(msg)
                 trials += 1
 
-            if not success:
+            if not success and timeout > 0:
                 raise TimeoutError('Attempts sending {} failed!'.format(msg))
 
         # Clear and return messages
-        msgs = [self.msg_list.pop(i) for i in reversed(range(len(self.msg_list)))
-                if msg_type is None or isinstance(self.msg_list[i], msg_type)]
+        msgs = [self.ack_list.pop(i) for i in reversed(range(len(self.ack_list)))
+                if msg_type is None or isinstance(self.ack_list[i], msg_type)]
         msgs = reversed(msgs)
 
         if print_recv:
@@ -308,8 +322,11 @@ class CommunicationManager(object):
     def __enter__(self):
         """Enter the 'with' context manager."""
         if not self.is_connected():
-            self.connect()
-            self._enter_connected = True
+            try:
+                self.connect()
+                self._enter_connected = True
+            except Exception as err:
+                print('Warning: Could not connect! {}'.format(err), file=sys.stderr)
         if not self.is_running():
             self.start()
             self._enter_started = True
@@ -348,7 +365,7 @@ def send_msg(com, baudrate, cmd_id, timeout=1, attempts=1, **kwargs):
             msgs = ser.send_wait(cmd, timeout=timeout, msg_type=cmd.RESPONSE_TYPE, attempts=attempts)
         except TimeoutError:
             # Timeout error with no response for the expected type.
-            msgs = [ser.msg_list.pop(0) for _ in range(len(ser.msg_list))]
+            msgs = [ser.ack_list.pop(0) for _ in range(len(ser.ack_list))]
 
         for msg in msgs:
             print('Received {}:'.format(msg.NAME))
