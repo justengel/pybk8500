@@ -145,6 +145,7 @@ class Parser(object):
 
         Yields:
             message (Message): The message that was parsed.
+            remain (bytes): Remaining bytes
         """
         self._buffer.extend(byts)
         remain = self._buffer
@@ -152,7 +153,7 @@ class Parser(object):
         while True:
             msg, error, remain = self.parse_msg(remain)
             if msg is not None:
-                yield msg
+                yield msg, remain
             elif error is None:
                 break
 
