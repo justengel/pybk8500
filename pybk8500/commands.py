@@ -35,6 +35,7 @@ class Message(bytearray):
     NAME = 'Base Command'
 
     RESPONSE_TYPE = None
+    REPR_EXCLUDE = []
 
     MSG_LENGTH = 26
 
@@ -75,16 +76,19 @@ class Message(bytearray):
         # Create get_value function for
         if isinstance(self, Message):
             # Is instance object with values
+            cls = self.__class__
             get_value = lambda name: getattr(self, name, None)
         else:
             # Was called as a classmethod, so there are no values
+            cls = self
             get_value = lambda name: None
 
         # Populate the fields
-        for name in dir(self):
-            f = getattr(self, name, None)
-            if isinstance(f, Field) and f.name == name:
-                fields[name] = get_value(name)
+        for name in dir(cls):
+            if not name.startswith('_'):
+                f = getattr(cls, name, None)
+                if isinstance(f, Field) and f.name == name:
+                    fields[name] = get_value(name)
 
         return fields
 
@@ -142,6 +146,15 @@ class Message(bytearray):
         # bytearray has no super().__bytes___() I'm guessing most efficient is iter
         return bytes(iter(self))
 
+    def __repr__(self):
+        field_str = ', '.join(("{}={}".format(name, repr(value)) for name, value in self.fields().items()
+                               if name not in self.REPR_EXCLUDE))
+        return '{}({})'.format(self.__class__.__name__, field_str)
+
+    def __str__(self):
+        return self.__repr__()
+
+
 
 @Parser.add_lookup
 class CommandStatus(Message):
@@ -162,12 +175,15 @@ class CommandStatus(Message):
     status.set_converter = STATUS_NAMES.get
     value = status  # Alias so Message(value=1) can be used
 
+Message.RESPONSE_TYPE = CommandStatus
+
 
 @Parser.add_lookup
 class SetRemoteOperation(Message):
     """Set the DC Load to remote operation"""
     ID = 0x20
     NAME = 'Set Remote Operation'
+    RESPONSE_TYPE = CommandStatus
 
     OPERATION_NAMES = {'Front Panel': 0, 'Remote': 1}
     OPERATION_VALUES = {v: k for k, v in OPERATION_NAMES.items()}
@@ -931,6 +947,8 @@ class ReadInputVoltageCurrentPowerState(Message):
     ID = 0x5F
     NAME = 'Read Input Voltage Current Power State'
 
+    REPR_EXCLUDE = ['operation_register', 'demand_register']
+
     # 3 to 6 4 byte little-endian integer for terminal voltage in units of 1 mV
     voltage = ScalarFloatField('voltage', 3, length=4, scalar=1000)  # 1 mV
 
@@ -954,7 +972,7 @@ class ReadInputVoltageCurrentPowerState(Message):
                                           })
 
     # 16 to 17 2 byte little-endian integer for demand state register (see bit list below)
-    demand_register = BitFlagField('operation_register', 16, length=2,
+    demand_register = BitFlagField('demand_register', 16, length=2,
                                    flags={
                                        'reversed_voltage': 0,  # 0 Reversed voltage is at instrument's terminals (1 means yes)
                                        'over_voltage': 1,  # 1 Over voltage (1 means yes)
