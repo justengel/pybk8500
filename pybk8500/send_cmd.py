@@ -20,6 +20,7 @@ __all__ = ['CommunicationManager', 'send_msg', 'main']
 
 class CommunicationManager(object):
     Parser = Parser
+    DEFAULT_READ_SIZE = 26
 
     def __init__(self, connection=None, parser=None, com=None, baudrate=None, **kwargs):
         super().__init__()
@@ -27,13 +28,19 @@ class CommunicationManager(object):
         if parser is None:
             parser = self.Parser()
         if connection is None:
-            connection = serial.Serial(com, baudrate)
+            connection = serial.Serial()
+            connection.port = com
+            connection.baudrate = baudrate
+            # connection.rts = True  # Documentation states needed. Did not work
+            # connection.dtr = True  # Documentation states needed. Did not work
 
         self._parser = None
         self._process = None
         self._enter_started = False
         self._enter_connected = False
         self.read_delay = 0.0001
+        self.wait_delay = 0.01
+        self.read_size = None  # Use in_waiting if None
 
         for k, v in kwargs.items():
             setattr(self, k, v)
@@ -106,26 +113,38 @@ class CommunicationManager(object):
         """Clear the message buffer and input buffer."""
         self.msg_list.clear()
         try:
+            self.connection.flush()
+        except (AttributeError, Exception):
+            pass
+        try:
             self.connection.reset_input_buffer()
+        except (AttributeError, Exception):
+            pass
+        try:
+            self.connection.reset_output_buffer()
         except (AttributeError, Exception):
             pass
 
     def read(self):
         """Read data from the connection."""
         if isinstance(self.connection, serial.Serial):
-            return self.connection.read(self.connection.in_waiting)
+            read_size = self.read_size
+            if read_size is None or read_size <= 0:
+                read_size = self.connection.in_waiting
+            return self.connection.read(read_size)
         else:
             return b''
 
     def write(self, byts):
         """Write the bytes (or message) data to the connection."""
-        self.connection.write(bytes(byts))
+        return self.connection.write(bytes(byts))
 
     def read_and_parse(self):
         """Read data from the connection and parse it."""
         try:
             byts = self.read()
-            self.parser.parse(byts, self.message_parsed)
+            if len(byts) > 0:
+                self.parser.parse(byts, self.message_parsed)
             time.sleep(self.read_delay)
         except (ConnectionAbortedError, Exception) as err:
             print(str(err), file=sys.stderr)
@@ -196,10 +215,10 @@ class CommunicationManager(object):
         while (time.time() - start) < timeout:
             if (msg_type is None and len(self.msg_list) > 0) or any(isinstance(msg, msg_type) for msg in self.msg_list):
                 return True
-            time.sleep(0.01)
+            time.sleep(self.wait_delay)
         return False
 
-    def send_wait(self, msg, timeout, msg_type=None, attempts=3, print_msg=True):
+    def send_wait(self, msg, timeout, msg_type=None, attempts=3, print_msg=True, print_recv=True):
         """Send a message and wait for a response.
 
         Args:
@@ -208,38 +227,36 @@ class CommunicationManager(object):
             msg_type (Message/object)[None]: Message type class to wait for.
             attempts (int)[3]: Number of attempts to send the message and wait for the response.
             print_msg (bool)[True]: If True print out that you are sending the message.
+            print_recv (bool)[True]: If True print all received messages.
 
         Returns:
             msg_list (list): List of received messages.
         """
-        try:
-            msg_name = msg.NAME
-        except AttributeError:
-            msg_name = msg[2]
-        try:
-            msg_to = msg.address
-        except AttributeError:
-            msg_to = msg[1]
-
         with self.listen_for_messages(msg_type):
             trials = 0
             success = False
-            pout = 'Sending {} to {} ...'.format(msg_name, msg_to)
+            pout = 'Sending {} ...'.format(msg)
             while (trials < attempts) and not success:
                 if print_msg:
                     print(pout)
                 self.write(bytes(msg))
                 success = self.wait_for_response(timeout, msg_type=msg_type)
-                pout = 'Retry sending {} to {} ...'.format(msg_name, msg_to)
+                pout = 'Retry sending {} ...'.format(msg)
                 trials += 1
 
             if not success:
-                raise TimeoutError('Attempts sending {} to {} failed!'.format(msg_name, msg_to))
+                raise TimeoutError('Attempts sending {} failed!'.format(msg))
 
         # Clear and return messages
         msgs = [self.msg_list.pop(i) for i in reversed(range(len(self.msg_list)))
                 if msg_type is None or isinstance(self.msg_list[i], msg_type)]
-        return reversed(msgs)
+        msgs = reversed(msgs)
+
+        if print_recv:
+            for msg in msgs:
+                print('Received:', msg)
+
+        return msgs
 
     send_wait_for_response = send_wait
 
@@ -254,6 +271,10 @@ class CommunicationManager(object):
 
         self.flush()
         self._process.start()
+
+        # Wait for the thread to start reading
+        time.sleep(0.01)
+
         return self
 
     def stop(self):
@@ -288,7 +309,7 @@ class CommunicationManager(object):
         """Exit the 'with' context manager."""
         if self._enter_started:
             self._enter_started = False
-            self.close()
+            self.stop()
         if self._enter_connected:
             self._enter_connected = False
             self.disconnect()
