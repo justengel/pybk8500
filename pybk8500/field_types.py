@@ -320,7 +320,7 @@ class ScalarFloatField(FloatField):
         if self.set_converter:
             value = self.set_converter(value, value)
 
-        if isinstance(value, float):
+        if isinstance(value, (int, float)):
             value = int(value * self.scalar)
         value = self.to_bytes(value, length=self.length, byteorder=self.byteorder, signed=self.signed)
         obj[self.index: self.index + len(value)] = value
