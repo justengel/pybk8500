@@ -12,9 +12,12 @@ from pybk8500.parser import Parser
 __all__ = [
     'Message', 'CC_Commands', 'CV_Commands', 'CW_Commands', 'CR_Commands',
     'CommandStatus', 'SetRemoteOperation', 'LoadSwitch', 'SetMaxVoltage', 'ReadMaxVoltage', 'SetMaxCurrent',
-    'ReadMaxCurrent', 'SetMaxPower', 'ReadMaxPower', 'SetMode', 'ReadMode', 'SetCCModeCurrent', 'ReadCCModeCurrent',
-    'SetCVModeVoltage', 'ReadCVModeVoltage', 'SetCWModePower', 'ReadCWModePower', 'SetCRModeResistance',
-    'ReadCRModeResistance', 'SetCCModeTransientCurrentAndTiming', 'ReadCCModeTransientParameters',
+    'ReadMaxCurrent', 'SetMaxPower', 'ReadMaxPower', 'SetMode', 'ReadMode',
+    'CC', 'SetCCModeCurrent', 'ReadCCModeCurrent', 'SetModeCurrent', 'ReadModeCurrent',
+    'CV', 'SetCVModeVoltage', 'ReadCVModeVoltage', 'SetModeVoltage', 'ReadModeVoltage',
+    'CW', 'SetCWModePower', 'ReadCWModePower', 'SetModePower', 'ReadModePower',
+    'CR', 'SetCRModeResistance', 'ReadCRModeResistance', 'SetModeResistance', 'ReadModeResistance',
+    'SetCCModeTransientCurrentAndTiming', 'ReadCCModeTransientParameters',
     'SetCVModeTransientVoltageAndTiming', 'ReadCVModeTransientParameters', 'SetCWModeTransientPowerAndTiming',
     'ReadCWModeTransientParameters', 'SetCRModeTransientResistanceAndTiming', 'ReadCRModeTransientParameters',
     'SelectListOperation', 'ReadListOperation', 'SetHowListsRepeat', 'ReadHowListsRepeat', 'SetNumberOfSteps',
@@ -307,6 +310,11 @@ class ReadCCModeCurrent(SetCCModeCurrent):
     NAME = 'Read CC Mode Current'
 
 
+CC = SetCCModeCurrent
+SetModeCurrent = SetCCModeCurrent
+ReadModeCurrent = ReadCCModeCurrent
+
+
 @Parser.add_lookup
 class SetCVModeVoltage(Message):
     """Set CV mode voltage"""
@@ -323,6 +331,11 @@ class ReadCVModeVoltage(SetCVModeVoltage):
     """Read CV mode voltage"""
     ID = 0x2D
     NAME = 'Read CV Mode Voltage'
+
+
+CV = SetCVModeVoltage
+SetModeVoltage = SetCVModeVoltage
+ReadModeVoltage = ReadCVModeVoltage
 
 
 @Parser.add_lookup
@@ -343,6 +356,11 @@ class ReadCWModePower(SetCWModePower):
     NAME = 'Read CW Mode Power'
 
 
+CW = SetCVModeVoltage
+SetModePower = SetCWModePower
+ReadModePower = ReadCWModePower
+
+
 @Parser.add_lookup
 class SetCRModeResistance(Message):
     """Set CR mode resistance"""
@@ -359,6 +377,11 @@ class ReadCRModeResistance(SetCRModeResistance):
     """Read CR mode resistance"""
     ID = 0x31
     NAME = 'Read CR Mode Resistance'
+
+
+CR = SetCRModeResistance
+SetModeResistance = SetCRModeResistance
+ReadModeResistance = ReadCRModeResistance
 
 
 @Parser.add_lookup
