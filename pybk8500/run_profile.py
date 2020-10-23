@@ -1,3 +1,4 @@
+import os
 import sys
 import time
 from collections import namedtuple
@@ -6,12 +7,15 @@ from pybk8500.send_cmd import CommunicationManager
 from pybk8500 import commands
 
 
-__all__ = ['parse_number', 'ProfileManager', 'ProfileRow', 'Profile']
+__all__ = ['parse_number', 'ProfileManager', 'ProfileRow', 'Profile', 'main']
 
 
 SetRemoteOperation = commands.SetRemoteOperation
 LoadSwitch = commands.LoadSwitch
 ReadInputVoltageCurrentPowerState = commands.ReadInputVoltageCurrentPowerState
+SetMode = commands.SetMode
+ReadMode = commands.ReadMode
+CommandStatus = commands.CommandStatus
 
 
 UNIT_CONVERT = {
@@ -150,7 +154,7 @@ class Profile(list):
 
 
 class ProfileManager(CommunicationManager):
-    def start_remote(self):
+    def setup_remote(self, *args, **kwargs):
         """Start the remote operation and set the load switch to off."""
         # Set to remote (Must start with this command for running remote)
         cmd = SetRemoteOperation(operation='Remote')  # or operation=1
@@ -160,7 +164,7 @@ class ProfileManager(CommunicationManager):
         cmd = LoadSwitch(operation='Off')  # or operation=0
         self.send_wait(cmd, timeout=1, print_recv=True)
 
-    def stop_remote(self):
+    def teardown_remote(self, *args, **kwargs):
         """Stop the remote operation to the front panel and set the load switch to off."""
         # Set the load Off
         cmd = LoadSwitch(operation='Off')  # or operation=0
@@ -173,12 +177,12 @@ class ProfileManager(CommunicationManager):
     def __enter__(self):
         super().__enter__()
         if self.is_connected():
-            self.start_remote()
+            self.setup_remote()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.is_connected():
-            self.stop_remote()
+            self.teardown_remote()
         return super().__exit__(exc_type, exc_val, exc_tb)
 
     def __init__(self, connection=None, parser=None, com=None, baudrate=None, **kwargs):
@@ -191,6 +195,7 @@ class ProfileManager(CommunicationManager):
 
         # Internal variables
         self.sample_time = 0.1
+        self.output = None
 
     def print_input(self, msg):
         """The message_parsed callback function that will print ReadInputVoltageCurrentPowerState messages."""
@@ -289,12 +294,55 @@ class ProfileManager(CommunicationManager):
                 self.send_wait(msg, timeout=1)
 
                 if row.timeout:
-                    # Set the load
-                    cmd = LoadSwitch(operation=1)
-                    self.send_wait(cmd, timeout=1)
+                    self.run_mode(timeout=row.timeout, mode=cmd_type)
 
-                    # Run and wait for messages
-                    self.wait_print_input(row.timeout, self.sample_time)
+    def run_mode(self, value=None, timeout=None, mode=None, **kwargs):
+        if timeout is None:
+            timeout = value
+
+        try:
+            mode = mode.MODE_TYPE
+        except (AttributeError, Exception):
+            pass
+
+        # Check the current mode
+        if isinstance(mode, str):
+            current_mode = None
+            msgs = self.send_wait(ReadMode(), msg_type=ReadMode, timeout=1, print_msg=False, print_recv=False)
+            for msg in msgs:
+                if isinstance(msg, ReadMode):
+                    current_mode = msg.mode
+
+            # Change the mode if needed
+            if mode != current_mode:
+                self.send_wait(SetMode(mode=mode), msg_type=CommandStatus, timeout=1, print_msg=False, print_recv=False)
+
+        # Set the load On
+        self.send_wait(LoadSwitch(operation=1), timeout=1)
+
+        # Run and wait for messages
+        if self.output:
+            # If output was set save results to a file
+            msgs = self.wait_save_input(timeout, self.sample_time)
+
+            # Check path
+            if not os.path.exists(os.path.dirname(self.output)):
+                try:
+                    os.makedirs(os.path.dirname(self.output), exist_ok=True)
+                except:
+                    pass
+
+            # Save results
+            with open(self.output, 'a') as f:
+                f.write('Volts,Amps,Watts\n')
+                for msg in msgs:
+                    f.write('{} V, {} A, {} W\n'.format(msg.voltage, msg.current, msg.power))
+        else:
+            # If no output print
+            self.wait_print_input(timeout, self.sample_time)
+
+        # Set the load Off
+        self.send_wait(LoadSwitch(operation=0), timeout=1)
 
     def set_sample_rate(self, value, **kwargs):
         self.sample_time = 1/value
@@ -319,27 +367,40 @@ class ProfileManager(CommunicationManager):
 
     set_port = set_com
 
+    def get_output(self):
+        """Return the output file."""
+        return self.output
 
+    def set_output(self, output, **kwargs):
+        """Set the output file."""
+        self.output = output
+
+
+# Custom internal commands
+ProfileManager.register_internal_command('SetupRemote', ProfileManager.setup_remote)
+ProfileManager.register_internal_command('TeardownRemote', ProfileManager.teardown_remote)
+ProfileManager.register_internal_command('Run', ProfileManager.run_mode)
 ProfileManager.register_internal_command('Connect', ProfileManager.connect)
 ProfileManager.register_internal_command('SampleRate', ProfileManager.set_sample_rate)
 ProfileManager.register_internal_command('SampleTime', ProfileManager.set_sample_time)
 ProfileManager.register_internal_command('BaudRate', ProfileManager.set_baudrate)
 ProfileManager.register_internal_command('Com', ProfileManager.set_com)
 ProfileManager.register_internal_command('Port', ProfileManager.set_port)
+ProfileManager.register_internal_command('Output', ProfileManager.set_output)
 
 
 @ProfileManager.register_internal_command('Print')
-def print_status(mngr, value, **kwargs):
+def print_status(mngr=None, value='', **kwargs):
     print(value)
 
 
-def main(filename, out=None, com=None, baudrate=None):
+def main(filename, out=None, com=None, baudrate=None, connection=None, parser=None):
     """Run the given profile."""
     if out is not None:
         out = open(out, 'w')
         sys.stdout = out
 
-    with ProfileManager(com=com, baudrate=baudrate) as mngr:
+    with ProfileManager(com=com, baudrate=baudrate, connection=connection, parser=parser) as mngr:
         mngr.load_profile(filename)
         mngr.run_profile()
 

@@ -334,6 +334,8 @@ class SetCCModeCurrent(Message):
     ID = 0x2A
     NAME = 'Set CC Mode Current'
 
+    MODE_TYPE = 'CC'
+
     current = ScalarFloatField('current', 3, length=4, scalar=10000)
     value = current  # Alias so Message(value=1) can be used
 
@@ -356,6 +358,8 @@ class SetCVModeVoltage(Message):
     """Set CV mode voltage"""
     ID = 0x2C
     NAME = 'Set CV Mode Voltage'
+
+    MODE_TYPE = 'CV'
 
     voltage = ScalarFloatField('voltage', 3, length=4, scalar=1000)
     value = voltage  # Alias so Message(value=1) can be used
@@ -380,6 +384,8 @@ class SetCWModePower(Message):
     ID = 0x2E
     NAME = 'Set CW Mode Power'
 
+    MODE_TYPE = 'CW'
+
     power = ScalarFloatField('power', 3, length=4, scalar=1000)
     value = power  # Alias so Message(value=1) can be used
 
@@ -402,6 +408,8 @@ class SetCRModeResistance(Message):
     """Set CR mode resistance"""
     ID = 0x30
     NAME = 'Set CR Mode Resistance'
+
+    MODE_TYPE = 'CR'
 
     resistance = ScalarFloatField('resistance', 3, length=4, scalar=1000)
     value = resistance  # Alias so Message(value=1) can be used
@@ -433,6 +441,8 @@ class SetCCModeTransientCurrentAndTiming(Message):
     """
     ID = 0x32
     NAME = 'Set CC Mode Transient Current and Timing'
+
+    MODE_TYPE = 'CC'
 
     # 3 to 6 Value A of current in units of 0.1 mA. Little-endian 4 byte number.
     current_a = ScalarFloatField('current_a', 3, length=4, scalar=10000)  # 0.1 mA
@@ -471,6 +481,8 @@ class SetCVModeTransientVoltageAndTiming(Message):
     ID = 0x34
     NAME = 'Set CV Mode Transient Voltage and Timing'
 
+    MODE_TYPE = 'CV'
+
     # 3 to 6 Value A of voltage in units of 1 mV. Little-endian 4 byte number.
     voltage_a = ScalarFloatField('voltage_a', 3, length=4, scalar=1000)  # 1 mV
     value_a = voltage_a  # Alias so Message(value_a=1) can be used
@@ -508,6 +520,8 @@ class SetCWModeTransientPowerAndTiming(Message):
     ID = 0x36
     NAME = 'Set CW Mode Transient Power and Timing'
 
+    MODE_TYPE = 'CW'
+
     # 3 to 6 Value A of power in units of 1 mW. Little-endian 4 byte number.
     power_a = ScalarFloatField('power_a', 3, length=4, scalar=1000)  # 1 mW
     value_a = power_a  # Alias so Message(value_a=1) can be used
@@ -544,6 +558,8 @@ class SetCRModeTransientResistanceAndTiming(Message):
     """Set CR mode transient resistance and timing"""
     ID = 0x38
     NAME = 'Set CR Mode Transient Resistance and Timing'
+
+    MODE_TYPE = 'CR'
 
     # 3 to 6 Value A of resistance in units of 1 m. Little-endian 4 byte number.
     resistance_a = ScalarFloatField('resistance_a', 3, length=4, scalar=1000)  # 1 m Ohm
@@ -648,6 +664,8 @@ class SetOneStepCurrentAndTime(Message):
     ID = 0x40
     NAME = 'Set One Of Steps Current And Time Values'
 
+    MODE_TYPE = 'CC'
+
     # 3 to 4 2 byte little-endian integer specifying which step number in the list
     step = Int16Field('step', 3)
 
@@ -672,6 +690,8 @@ class SetOneStepVoltageAndTime(Message):
     """Set one of the step's voltage and time values"""
     ID = 0x42
     NAME = 'Set One Of Steps Voltage And Time Values'
+
+    MODE_TYPE = 'CV'
 
     # 3 to 4 2 byte little-endian integer specifying which step number in the list
     step = Int16Field('step', 3)
@@ -698,6 +718,8 @@ class SetOneStepPowerAndTime(Message):
     ID = 0x44
     NAME = 'Set One Of Steps Power And Time Values'
 
+    MODE_TYPE = 'CW'
+
     # 3 to 4 2 byte little-endian integer specifying which step number in the list
     step = Int16Field('step', 3)
 
@@ -722,6 +744,8 @@ class SetOneStepResistanceAndTime(Message):
     """Set one of the step's resistance and time values"""
     ID = 0x46
     NAME = 'Set One Of Steps Resistance And Time Values'
+
+    MODE_TYPE = 'CR'
 
     # 3 to 4 2 byte little-endian integer specifying which step number in the list
     step = Int16Field('step', 3)
