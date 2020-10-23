@@ -191,11 +191,17 @@ CSV
 The CSV of profile commands is defined by "Command", "Value", "Run Time (s)".
 
   * Command - Name of the command you want to send.
+
    * Runs any command in "pybk8500.commands" as well as predefined custom internal commands.
+
   * Value - Value to pass into the command.
+
    * The Command needs the "value" alias or custom internal command.
+
    * Accepts units! "1 mW" will be parsed and converted to "0.001 W"
+
   * Run Time (s) - Turn on the load and run for the given amount of time.
+
    * Accepts Units "1 h" or "1:00:00" will be parsed and converted to "3600 s"
 
 
@@ -203,34 +209,56 @@ Commands
 --------
 
   * Comment line by starting the line with "#" or ";"
+
   * Internal Commands
+
    * "SetupRemote,," - Turn On Remote, Turn Off Load
+
    * "TeardownRemote,," - Turn Off Load, Turn Off Remote
+
    * "Run,,10 s" - Run the current mode by turning on the load and reading the input for the run time.
+
    * "Connect,," - Connect the serial port.
+
    * "SampleRate,40," - Set the read input time sample rate (1/value delay after each read).
+
    * "SampleTime,0.1," - Set the read input time (value delay after each read).
+
    * "BaudRate,38400," - Set the serial port baud rate.
+
    * "Com,COM1," - Set the serial com port.
+
    * "Port,COM1," - Set the serial com port.
+
    * "Output,my_file.csv," - Set the output file for any subsequent runs.
+
     * "Output,," - Print the results for subsequent runs.
+
    * "Print,===== Print =====," - Print the value ("===== Print =====") to stdout.
+
   * All defined commands in "pybk8500.commands.py" can be used
+
    * "CC,3 A,100 ms" - Set Constant Current of value (3 A).
+
     * If "Run Time (s)" is given run this mode for the given amount of time.
+
    * "CV,12 V,1" - Set Constant Voltage of value (12 V).
+
     * If "Run Time (s)" is given run this mode for the given amount of time.
+
    * "CW,1,08:00" - Set Constant Power of value (1 W).
+
     * If "Run Time (s)" is given run this mode for the given amount of time.
+
    * "CR,1,1" - Set Constant Resistance of value (1 Ohm).
+
     * If "Run Time (s)" is given run this mode for the given amount of time.
 
 
 Example
 -------
 
-.. code-block:: csv
+.. code-block:: text
 
     # profile.txt
     Command,Value,Run Time (s)
