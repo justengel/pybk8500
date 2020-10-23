@@ -1,5 +1,6 @@
 from pybk8500.__meta__ import version as __version__
 
+from pybk8500.utils import parse_number
 from pybk8500.parser import ChecksumError, MessageTypeError, Parser
 
 # Why bother giving top level access to these classes?

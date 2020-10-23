@@ -1,7 +1,7 @@
 Command,Value,Run Time (s)
 
 Print,========== Setup Serial Port ==========,
-SampleRate,40.000,0
+SampleRate,40.000,0ms
 BaudRate,38400,0
 Com,Com1,0
 
@@ -11,15 +11,15 @@ SetupRemote,,
 # LoadOff,,
 
 Print,========== Setup Max Values ==========,
-SetMaxCurrent,4.600,0
+SetMaxCurrent,4.600 A,0
 SetMaxVoltage,25.000,0
 SetMaxPower,30.000,0
 
 Print,========== CC ==========,
 Output,CC1.csv,
-CC,0.001,0.100
+CC,1mA,0.100
 Output,CC2.csv,
-CC,3.000,0.100
+CC,3 W,100 ms
 Output,CC3.csv,
 CC,1.600,19.8
 

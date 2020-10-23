@@ -3,6 +3,8 @@ import sys
 import time
 from collections import namedtuple
 from dynamicmethod import dynamicmethod
+
+from pybk8500.utils import parse_number
 from pybk8500.send_cmd import CommunicationManager
 from pybk8500 import commands
 
@@ -16,55 +18,6 @@ ReadInputVoltageCurrentPowerState = commands.ReadInputVoltageCurrentPowerState
 SetMode = commands.SetMode
 ReadMode = commands.ReadMode
 CommandStatus = commands.CommandStatus
-
-
-UNIT_CONVERT = {
-    'T': 10**12, 'Terra': 10**12,
-    'G': 10**9, 'Giga': 10**9,
-    'M': 10**6, 'Mega': 10**6,
-    'k': 10**3, 'kilo': 10**3,
-    'c': 10**-2, 'centi': 10**-2,
-    'm': 10**-3, 'milli': 10**-3,
-    'µ': 10**-6, 'micro': 10**-6,
-    'n': 10**-9, 'nano': 10**-9,
-    'p': 10**-12, 'pico': 10**-12,
-    }
-
-
-def parse_number(value):
-    """Convert the given value to a number"""
-    modifier = 1
-    unit = ''
-    try:
-        num, modifier, unit = value.split(' ', 2)
-    except (ValueError, TypeError, Exception):
-        try:
-            num, modifier = value.split(' ', 1)
-            modifier, unit = modifier[:-1], modifier[-1]  # Convert ms to m s
-        except (ValueError, TypeError, Exception):
-            num = value
-
-    # Get the modifier
-    modifier = UNIT_CONVERT.get(modifier, modifier)
-
-    # Get the value
-    try:
-        num = int(num)
-    except (ValueError, TypeError, Exception):
-        try:
-            num = float(num)
-        except (ValueError, TypeError, Exception):
-            pass
-
-    # Convert the value to normal units
-    try:
-        num = num * modifier
-    except (ValueError, TypeError, Exception):
-        pass
-
-    if not isinstance(num, str):
-        value = num
-    return value, unit
 
 
 ProfileRow = namedtuple('ProfileRow', ['command', 'value', 'timeout'])
@@ -101,11 +54,11 @@ class Profile(list):
 
     @classmethod
     def parse_value(cls, value):
-        return parse_number(value)[0]
+        return parse_number(value)
 
     @classmethod
     def parse_timeout(cls, value):
-        timeout = parse_number(value)[0]
+        timeout = parse_number(value)
         if not timeout or isinstance(timeout, str):
             timeout = 0
         return timeout
