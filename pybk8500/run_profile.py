@@ -347,33 +347,19 @@ def print_status(mngr=None, value='', **kwargs):
     print(value)
 
 
-def main(filename, out=None, com=None, baudrate=None, connection=None, parser=None):
+def main(filename, com=None, baudrate=None, connection=None, parser=None):
     """Run the given profile."""
-    if out is not None:
-        out = open(out, 'w')
-        sys.stdout = out
-
     with ProfileManager(com=com, baudrate=baudrate, connection=connection, parser=parser) as mngr:
         mngr.load_profile(filename)
         mngr.run_profile()
-
-    try:
-        sys.stdout = sys.__stdout__
-    except (AttributeError, Exception):
-        pass
-    try:
-        out.close()
-    except (AttributeError, Exception):
-        pass
 
 
 if __name__ == '__main__':
     import argparse
     P = argparse.ArgumentParser('Run a profile.')
     P.add_argument('filename', type=str, help='Profile to read and execute.')
-    P.add_argument('-o', '--out', type=str, default=None, help='Output filename to save to. If None print results.')
     P.add_argument('--com', '-c', type=str, default=None, help='Com port to connect to.')
     P.add_argument('--baudrate', '-b', type=int, default=None, help='Baud rate to connect with.')
     ARGS = P.parse_args()
 
-    main(ARGS.filename, out=ARGS.out, com=ARGS.com, baudrate=ARGS.baudrate)
+    main(ARGS.filename, com=ARGS.com, baudrate=ARGS.baudrate)
