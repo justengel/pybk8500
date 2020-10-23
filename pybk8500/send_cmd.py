@@ -38,6 +38,7 @@ class CommunicationManager(object):
 
         self._parser = None
         self._process = None
+        self._in_enter = False
         self._enter_started = False
         self._enter_connected = False
         self.read_delay = 0.0001
@@ -106,6 +107,35 @@ class CommunicationManager(object):
 
         if is_connected:
             self.connect()
+
+    def get_baudrate(self):
+        """Return the baudrate."""
+        return self.connection.baudrate
+
+    def set_baudrate(self, value, *args, **kwargs):
+        """Set the baudrate."""
+        with self.change_connection():
+            self.connection.baudrate = value
+
+    def get_com(self):
+        """Return the serial com port."""
+        return self.connection.port
+
+    def set_com(self, value, *args, **kwargs):
+        """Set the serial com port and try to connect."""
+        with self.change_connection():
+            self.connection.port = value
+
+        if not self.is_connected():
+            try:
+                self.connect()
+                if self._in_enter:
+                    self._enter_connected = True
+            except Exception as err:
+                print('Warning: Could not connect! {}'.format(err), file=sys.stderr)
+
+    get_port = get_com
+    set_port = set_com
 
     def is_connected(self):
         """Return if the connection/serial port is connected."""
@@ -326,6 +356,7 @@ class CommunicationManager(object):
 
     def __enter__(self):
         """Enter the 'with' context manager."""
+        self._in_enter = True
         if not self.is_connected():
             try:
                 self.connect()
@@ -339,6 +370,7 @@ class CommunicationManager(object):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Exit the 'with' context manager."""
+        self._in_enter = False
         if self._enter_started:
             self._enter_started = False
             self.stop()

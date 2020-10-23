@@ -249,7 +249,22 @@ class ProfileManager(CommunicationManager):
                 if row.timeout:
                     self.run_mode(timeout=row.timeout, mode=cmd_type)
 
-    def run_mode(self, value=None, timeout=None, mode=None, **kwargs):
+    def run_mode(self, value=None, timeout=None, mode=None, *args, **kwargs):
+        """Run the given mode (or current mode) for the given timeout while reading the input values.
+
+        If "output" is set save the read inputs to the output file. If no "output" then print the read inputs.
+
+        Steps:
+          * Check the current mode and change the mode if needed.
+          * Turn on the load
+          * Wait the timeout and read input with the set sample_time while saving or printing the output.
+          * Turn off Load
+
+        Args:
+            value (object)[None]: Optional timeout if timeout is not given.
+            timeout (int/float)[None]: Timeout to wait while reading the input.
+            mode (str)[None]: Run in this mode. Mode command (Message, CC, CV, CW, CR) or string "CC", "CV", "CW", "CR".
+        """
         if timeout is None:
             timeout = value
 
@@ -297,34 +312,27 @@ class ProfileManager(CommunicationManager):
         # Set the load Off
         self.send_wait(LoadSwitch(operation=0), timeout=1)
 
-    def set_sample_rate(self, value, **kwargs):
+    def get_sample_rate(self):
+        """Return the sampling time delay in hz. The sample rate is (sample_time = 1/value)."""
+        return 1/self.sample_time
+
+    def set_sample_rate(self, value, *args, **kwargs):
+        """Set the sampling time delay in hz. The sample rate is (sample_time = 1/value)."""
         self.sample_time = 1/value
 
-    def set_sample_time(self, value, **kwargs):
+    def get_sample_time(self):
+        """Return the sampling time delay."""
+        return self.sample_time
+
+    def set_sample_time(self, value, *args, **kwargs):
+        """Set the sampling time delay."""
         self.sample_time = value
-
-    def set_baudrate(self, value, **kwargs):
-        with self.change_connection():
-            self.connection.baudrate = value
-
-    def set_com(self, value, **kwargs):
-        with self.change_connection():
-            self.connection.port = value
-
-        if not self.is_connected():
-            try:
-                self.connect()
-                self._enter_connected = True
-            except Exception as err:
-                print('Warning: Could not connect! {}'.format(err), file=sys.stderr)
-
-    set_port = set_com
 
     def get_output(self):
         """Return the output file."""
         return self.output
 
-    def set_output(self, output, **kwargs):
+    def set_output(self, output, *args, **kwargs):
         """Set the output file."""
         self.output = output
 
@@ -343,7 +351,8 @@ ProfileManager.register_internal_command('Output', ProfileManager.set_output)
 
 
 @ProfileManager.register_internal_command('Print')
-def print_status(mngr=None, value='', **kwargs):
+def print_status(mngr=None, value='', *args, **kwargs):
+    """Print the Value string."""
     print(value)
 
 
