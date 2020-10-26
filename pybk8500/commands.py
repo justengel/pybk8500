@@ -398,7 +398,7 @@ class ReadCWModePower(SetCWModePower):
     NAME = 'Read CW Mode Power'
 
 
-CW = SetCVModeVoltage
+CW = SetCWModePower
 SetModePower = SetCWModePower
 ReadModePower = ReadCWModePower
 
