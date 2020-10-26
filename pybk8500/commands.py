@@ -40,6 +40,7 @@ class Message(bytearray):
 
     RESPONSE_TYPE = None
     REPR_EXCLUDE = []
+    REPR_EXCLUDE_HEADER = ['command', 'checksum']
 
     MSG_LENGTH = 26
 
@@ -152,7 +153,7 @@ class Message(bytearray):
 
     def __repr__(self):
         field_str = ', '.join(("{}={}".format(name, repr(value)) for name, value in self.fields().items()
-                               if name not in self.REPR_EXCLUDE))
+                               if name not in self.REPR_EXCLUDE_HEADER and name not in self.REPR_EXCLUDE))
         return '{}({})'.format(self.__class__.__name__, field_str)
 
     def __str__(self):
