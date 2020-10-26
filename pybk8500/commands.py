@@ -172,11 +172,11 @@ class CommandStatus(Message):
                     'Unrecognized command': 0xB0,
                     'Invalid command': 0xC0,
                     'Command was successful': 0x80}
-    STATUS_VALUES = {v: k for k, v in STATUS_NAMES.items()}
+    # STATUS_VALUES = {v: k for k, v in STATUS_NAMES.items()}
 
-    status = Int8Field('status', 3)
-    status.get_converter = STATUS_VALUES.get
-    status.set_converter = STATUS_NAMES.get
+    status = Int8Field('status', 3, d_names=STATUS_NAMES)
+    # status.get_converter = STATUS_VALUES.get
+    # status.set_converter = STATUS_NAMES.get
     value = status  # Alias so Message(value=1) can be used
 
 Message.RESPONSE_TYPE = CommandStatus
@@ -190,11 +190,7 @@ class SetRemoteOperation(Message):
     RESPONSE_TYPE = CommandStatus
 
     OPERATION_NAMES = {'Front Panel': 0, 'Remote': 1}
-    OPERATION_VALUES = {v: k for k, v in OPERATION_NAMES.items()}
-
-    operation = Int8Field('operation', 3)
-    operation.get_converter = OPERATION_VALUES.get
-    operation.set_converter = OPERATION_NAMES.get
+    operation = Int8Field('operation', 3, d_names=OPERATION_NAMES)
     value = operation  # Alias so Message(value=1) can be used
 
 
@@ -223,11 +219,7 @@ class LoadSwitch(Message):
     NAME = 'Load Switch'
 
     SWITCH_NAMES = {'Off': 0, 'On': 1}
-    SWITCH_VALUES = {v: k for k, v in SWITCH_NAMES.items()}
-
-    operation = Int8Field('operation', 3)
-    operation.get_converter = SWITCH_VALUES.get
-    operation.set_converter = SWITCH_NAMES.get
+    operation = Int8Field('operation', 3, d_names=SWITCH_NAMES)
     value = operation  # Alias so Message(value=1) can be used
 
 
@@ -309,15 +301,8 @@ class SetMode(Message):
     ID = 0x28
     NAME = 'Set Mode'
 
-    MODE_NAMES = {'CC': 0,
-                  'CV': 1,
-                  'CW': 2,
-                  'CR': 3}
-    MODE_VALUES = {v: k for k, v in MODE_NAMES.items()}
-
-    mode = Int8Field('mode', 3)
-    mode.get_converter = MODE_VALUES.get
-    mode.set_converter = MODE_NAMES.get
+    MODE_NAMES = {'CC': 0, 'CV': 1, 'CW': 2, 'CR': 3}
+    mode = Int8Field('mode', 3, d_names=MODE_NAMES)
     value = mode  # Alias so Message(value=1) can be used
 
 
@@ -461,11 +446,7 @@ class SetCCModeTransientCurrentAndTiming(Message):
 
     # 15 Transient operation: 0 is CONTINUOUS, 1 is PULSE, 2 is TOGGLED
     OPERATION_NAMES = {'CONTINUOUS': 0, 'PULSE': 1, 'TOGGLED': 2}
-    OPERATION_VALUES = {v: k for k, v in OPERATION_NAMES.items()}
-
-    operation = Int8Field('operation', 15)
-    operation.get_converter = OPERATION_VALUES.get
-    operation.set_converter = OPERATION_NAMES.get
+    operation = Int8Field('operation', 15, d_names=OPERATION_NAMES)
 
 
 @Parser.add_lookup
@@ -500,11 +481,7 @@ class SetCVModeTransientVoltageAndTiming(Message):
 
     # 15 Transient operation: 0 is CONTINUOUS, 1 is PULSE, 2 is TOGGLED
     OPERATION_NAMES = {'CONTINUOUS': 0, 'PULSE': 1, 'TOGGLED': 2}
-    OPERATION_VALUES = {v: k for k, v in OPERATION_NAMES.items()}
-
-    operation = Int8Field('operation', 15)
-    operation.get_converter = OPERATION_VALUES.get
-    operation.set_converter = OPERATION_NAMES.get
+    operation = Int8Field('operation', 15, d_names=OPERATION_NAMES)
 
 
 @Parser.add_lookup
@@ -539,11 +516,7 @@ class SetCWModeTransientPowerAndTiming(Message):
 
     # 15 Transient operation: 0 is CONTINUOUS, 1 is PULSE, 2 is TOGGLED
     OPERATION_NAMES = {'CONTINUOUS': 0, 'PULSE': 1, 'TOGGLED': 2}
-    OPERATION_VALUES = {v: k for k, v in OPERATION_NAMES.items()}
-
-    operation = Int8Field('operation', 15)
-    operation.get_converter = OPERATION_VALUES.get
-    operation.set_converter = OPERATION_NAMES.get
+    operation = Int8Field('operation', 15, d_names=OPERATION_NAMES)
 
 
 @Parser.add_lookup
@@ -578,11 +551,7 @@ class SetCRModeTransientResistanceAndTiming(Message):
 
     # 15 Transient operation: 0 is CONTINUOUS, 1 is PULSE, 2 is TOGGLED
     OPERATION_NAMES = {'CONTINUOUS': 0, 'PULSE': 1, 'TOGGLED': 2}
-    OPERATION_VALUES = {v: k for k, v in OPERATION_NAMES.items()}
-
-    operation = Int8Field('operation', 15)
-    operation.get_converter = OPERATION_VALUES.get
-    operation.set_converter = OPERATION_NAMES.get
+    operation = Int8Field('operation', 15, d_names=OPERATION_NAMES)
 
 
 @Parser.add_lookup
@@ -599,13 +568,12 @@ class SelectListOperation(Message):
     ID = 0x3A
     NAME = 'Select List Operation'
 
-    OPERATION_NAMES = {'Constant Current (CC)': 0, 'Constant Voltage (CV)': 1,
-                       'Constant Power (CP)': 2, 'Constant Resistance (CR)': 3}
-    OPERATION_VALUES = {v: k for k, v in OPERATION_NAMES.items()}
-
-    operation = Int8Field('operation', 3)
-    operation.get_converter = OPERATION_VALUES.get
-    operation.set_converter = OPERATION_NAMES.get
+    OPERATION_NAMES = {'CC': 0,  # 'Constant Current (CC)': 0,
+                       'CV': 1,  # 'Constant Voltage (CV)': 1,
+                       'CP': 2,  # 'Constant Power (CP)': 2,
+                       'CR': 3,  # 'Constant Resistance (CR)': 3,
+                       }
+    operation = Int8Field('operation', 3, d_names=OPERATION_NAMES)
     value = operation  # Alias so Message(value=1) can be used
 
 
@@ -624,11 +592,7 @@ class SetHowListsRepeat(Message):
     NAME = 'Set Lists Repeat'
 
     REPEAT_NAMES = {'Once': 0, 'Repeat': 1}
-    REPEAT_VALUES = {v: k for k, v in REPEAT_NAMES.items()}
-
-    repeat = Int8Field('repeat', 3)
-    repeat.get_converter = REPEAT_VALUES.get
-    repeat.set_converter = REPEAT_NAMES.get
+    repeat = Int8Field('repeat', 3, d_names=REPEAT_NAMES)
     value = repeat  # Alias so Message(value=1) can be used
 
 
@@ -876,13 +840,8 @@ class SetTimerStateLoadOn(Message):
     ID = 0x52
     NAME = 'Set Timer State Load On'
 
-    STATE_NAMES = {'disabled': 0,
-                   'enabled': 1}
-    STATE_VALUES = {v: k for k, v in STATE_NAMES.items()}
-
-    state = Int8Field('state', 3)
-    state.get_converter = STATE_VALUES.get
-    state.set_converter = STATE_NAMES.get
+    STATE_NAMES = {'disabled': 0, 'enabled': 1}
+    state = Int8Field('state', 3, d_names=STATE_NAMES)
     value = state  # Alias so Message(value=1) can be used
 
 
@@ -911,13 +870,10 @@ class SetLocalControlState(Message):
     ID = 0x55
     NAME = 'Set Local Control State'
 
-    STATE_NAMES = {'disabled': 0,  # 0 means to disable the Local key on the front panel
-                   'enabled': 1}   # 1 means to enable the Local key on the front panel
-    STATE_VALUES = {v: k for k, v in STATE_NAMES.items()}
-
-    state = Int8Field('state', 3)
-    state.get_converter = STATE_VALUES.get
-    state.set_converter = STATE_NAMES.get
+    # 0 means to disable the Local key on the front panel
+    # 1 means to enable the Local key on the front panel
+    STATE_NAMES = {'disabled': 0, 'enabled': 1}
+    state = Int8Field('state', 3, d_names=STATE_NAMES)
     value = state  # Alias so Message(value=1) can be used
 
 
@@ -927,13 +883,10 @@ class SetRemoteSensingState(Message):
     ID = 0x56
     NAME = 'Set Remote Sensing State'
 
-    STATE_NAMES = {'disabled': 0,  # 0 means to disable remote sensing
-                   'enabled': 1}   # 1 means to enable remote sensing
-    STATE_VALUES = {v: k for k, v in STATE_NAMES.items()}
-
-    state = Int8Field('state', 3)
-    state.get_converter = STATE_VALUES.get
-    state.set_converter = STATE_NAMES.get
+    # 0 means to disable remote sensing
+    # 1 means to enable remote sensing
+    STATE_NAMES = {'disabled': 0, 'enabled': 1}
+    state = Int8Field('state', 3, d_names=STATE_NAMES)
     value = state  # Alias so Message(value=1) can be used
 
 
@@ -951,15 +904,11 @@ class SelectTriggerSource(Message):
     ID = 0x58
     NAME = 'Select Trigger Source'
 
-    TRIGGER_NAMES = {'immediate trigger': 0,  # 0 means immediate trigger (i.e., triggered from the front panel)
-                     'external trigger': 1,  # 1 means external trigger from the rear panel connector
-                     'software trigger': 2,  # 2 means a bus (software) trigger (the 0x5A command)
-                     }
-    TRIGGER_VALUES = {v: k for k, v in TRIGGER_NAMES.items()}
-
-    trigger = Int8Field('trigger', 3)
-    trigger.get_converter = TRIGGER_VALUES.get
-    trigger.set_converter = TRIGGER_NAMES.get
+    # 0 means immediate trigger (i.e., triggered from the front panel)
+    # 1 means external trigger from the rear panel connector
+    # 2 means a bus (software) trigger (the 0x5A command)
+    TRIGGER_NAMES = {'immediate trigger': 0, 'external trigger': 1, 'software trigger': 2,}
+    trigger = Int8Field('trigger', 3, d_names=TRIGGER_NAMES)
     value = trigger  # Alias so Message(value=1) can be used
 
 
@@ -1003,17 +952,8 @@ class SelectFunctionType(Message):
     ID = 0x5D
     NAME = 'Select Function Type'
 
-    FUNCTION_NAMES = {'Fixed': 0,
-                      'Short': 1,
-                      'Transient': 2,
-                      'List': 3,
-                      'Battery': 4,
-                      }
-    FUNCTION_VALUES = {v: k for k, v in FUNCTION_NAMES.items()}
-
-    function = Int8Field('function', 3)
-    function.get_converter = FUNCTION_VALUES.get
-    function.set_converter = FUNCTION_NAMES.get
+    FUNCTION_NAMES = {'Fixed': 0, 'Short': 1, 'Transient': 2, 'List': 3, 'Battery': 4, }
+    function = Int8Field('function', 3, d_names=FUNCTION_NAMES)
     value = function  # Alias so Message(value=1) can be used
 
 

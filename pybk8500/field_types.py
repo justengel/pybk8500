@@ -1,6 +1,7 @@
 import copy
 import struct
 from bitflags import bitflags
+from collections import OrderedDict
 
 
 __all__ = ['Field', 'BytesField', 'StrField',
@@ -21,7 +22,7 @@ class Field(object):
     DEFAULT_SIGNED = False
 
     def __init__(self, name, index, length=None, byteorder=None, signed=None,
-                 get_converter=None, set_converter=None,
+                 get_converter=None, set_converter=None, d_names=None, d_values=None,
                  fget=None, fset=None, fdel=None, doc=None):
         """Construct the field object
 
@@ -36,6 +37,10 @@ class Field(object):
                 *Signature* get_converter(value: Union[int, bytes], default:Union[int, bytes]=value) -> object
             set_converter (callable/function) [None]: Set the value by first calling this function to deconstruct units.
                 *Signature* set_converter(value: Union[int, bytes], default:Union[int, bytes]=value) -> object
+            d_names (dict)[None]: Dictionary that convert's string names to integers (automatically set set_converter).
+                If d_values is given this is automatically created.
+            d_values (dict)[None]: Dictionary that convert's integers to string names (automatically set get_converter).
+                If d_names is given this is automatically created.
 
             fget (callable/function)[None]: Function to override which return the value.
             fset (callable/function)[None]: Function to override which sets the value.
@@ -50,6 +55,16 @@ class Field(object):
             byteorder = self.DEFAULT_BYTEORDER
         if signed is None:
             signed = self.DEFAULT_SIGNED
+
+        # Automatically set_converter or get_converter
+        if (d_names is not None or d_values is not None) and set_converter is None:
+            if d_names is None:
+                d_names = OrderedDict([(v, k) for k, v in d_values.items()])
+            elif d_values is None:
+                d_values = OrderedDict([(v, k) for k, v in d_names.items()])
+            set_converter = d_names.get
+        if d_values is not None and get_converter is None:
+            get_converter = d_values.get
 
         if fget is None:
             fget = self.get_value
