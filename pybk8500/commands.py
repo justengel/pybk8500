@@ -316,8 +316,8 @@ class SetMode(Message):
     MODE_VALUES = {v: k for k, v in MODE_NAMES.items()}
 
     mode = Int8Field('mode', 3)
-    mode.get_converter = MODE_NAMES.get
-    mode.set_converter = MODE_VALUES.get
+    mode.get_converter = MODE_VALUES.get
+    mode.set_converter = MODE_NAMES.get
     value = mode  # Alias so Message(value=1) can be used
 
 
