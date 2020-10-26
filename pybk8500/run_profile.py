@@ -276,14 +276,14 @@ class ProfileManager(CommunicationManager):
         # Check the current mode
         if isinstance(mode, str):
             current_mode = None
-            msgs = self.send_wait(ReadMode(), msg_type=ReadMode, timeout=1, print_msg=False, print_recv=False)
+            msgs = self.send_wait(ReadMode(), msg_type=ReadMode, timeout=1, print_msg=True, print_recv=True)
             for msg in msgs:
                 if isinstance(msg, ReadMode):
                     current_mode = msg.mode
 
             # Change the mode if needed
             if mode != current_mode:
-                self.send_wait(SetMode(mode=mode), msg_type=CommandStatus, timeout=1, print_msg=False, print_recv=False)
+                self.send_wait(SetMode(mode=mode), msg_type=CommandStatus, timeout=1, print_msg=True, print_recv=True)
 
         # Set the load On
         self.send_wait(LoadSwitch(operation=1), timeout=1)
