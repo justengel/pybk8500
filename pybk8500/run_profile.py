@@ -342,6 +342,8 @@ ProfileManager.register_internal_command('SetupRemote', ProfileManager.setup_rem
 ProfileManager.register_internal_command('TeardownRemote', ProfileManager.teardown_remote)
 ProfileManager.register_internal_command('Run', ProfileManager.run_mode)
 ProfileManager.register_internal_command('Connect', ProfileManager.connect)
+ProfileManager.register_internal_command('SetRTS', ProfileManager.set_rts)
+ProfileManager.register_internal_command('SetDTR', ProfileManager.set_dtr)
 ProfileManager.register_internal_command('SampleRate', ProfileManager.set_sample_rate)
 ProfileManager.register_internal_command('SampleTime', ProfileManager.set_sample_time)
 ProfileManager.register_internal_command('BaudRate', ProfileManager.set_baudrate)

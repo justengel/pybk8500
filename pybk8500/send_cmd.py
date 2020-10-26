@@ -137,6 +137,30 @@ class CommunicationManager(object):
     get_port = get_com
     set_port = set_com
 
+    def get_rts(self):
+        """Return if the RTS Hardware Flow Control is set."""
+        try:
+            return self.connection.rts
+        except (AttributeError, Exception):
+            return False
+
+    def set_rts(self, value, *args, **kwargs):
+        """Set the RTS Hardware Flow Control."""
+        with self.change_connection():
+            self.connection.rts = bool(value)
+
+    def get_dtr(self):
+        """Return if the DTR Hardware Flow Control is set."""
+        try:
+            return self.connection.dtr
+        except (AttributeError, Exception):
+            return False
+
+    def set_dtr(self, value, *args, **kwargs):
+        """Set the DTR Hardware Flow Control."""
+        with self.change_connection():
+            self.connection.dtr = bool(value)
+
     def is_connected(self):
         """Return if the connection/serial port is connected."""
         try:
