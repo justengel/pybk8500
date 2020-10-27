@@ -27,7 +27,7 @@ from pybk8500.commands import \
     ReadTimerValueForLoadOn, SetTimerStateLoadOn, ReadTimerStateLoadOn, SetCommunicationAddress, \
     SetLocalControlState, SetRemoteSensingState, ReadRemoteSensingState, SelectTriggerSource, \
     ReadTriggerSource, TriggerElectronicLoad, SaveDCLoadSettings, RecallDCLoadSettings, SelectFunctionType, \
-    GetFunctionType, ReadInputVoltageCurrentPowerState, GetProductInfo, ReadBarCode
+    GetFunctionType, ReadInputVoltageCurrentPowerState, ReadInput, GetProductInfo, ReadBarCode
 
 
 try:

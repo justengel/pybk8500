@@ -2,6 +2,7 @@
 Protocol can be found at https://bkpmedia.s3.amazonaws.com/downloads/manuals/en-us/85xx_manual.pdf
 There is a section called Command details.
 """
+import datetime
 from dynamicmethod import dynamicmethod
 
 from pybk8500.field_types import Field, BytesField, StrField, \
@@ -29,7 +30,7 @@ __all__ = [
     'ReadTimerValueForLoadOn', 'SetTimerStateLoadOn', 'ReadTimerStateLoadOn', 'SetCommunicationAddress',
     'SetLocalControlState', 'SetRemoteSensingState', 'ReadRemoteSensingState', 'SelectTriggerSource',
     'ReadTriggerSource', 'TriggerElectronicLoad', 'SaveDCLoadSettings', 'RecallDCLoadSettings', 'SelectFunctionType',
-    'GetFunctionType', 'ReadInputVoltageCurrentPowerState', 'GetProductInfo', 'ReadBarCode'
+    'GetFunctionType', 'ReadInputVoltageCurrentPowerState', 'ReadInput', 'GetProductInfo', 'ReadBarCode'
     ]
 
 
@@ -125,6 +126,7 @@ class Message(bytearray):
         super().__init__(byts[: self.MSG_LENGTH])
 
         # Set attributes with the given keyword arguments
+        self.timestamp = datetime.datetime.now()
         if address is not None:
             self.address = address
 
@@ -1009,6 +1011,9 @@ class ReadInputVoltageCurrentPowerState(Message):
                                        'constant_power': 8,  # 8 Constant power
                                        'constant_resistance': 9,  # 9 Constant resistance
                                        })
+
+
+ReadInput = ReadInputVoltageCurrentPowerState
 
 
 @Parser.add_lookup
