@@ -1,6 +1,7 @@
 import os
 import sys
 import time
+import datetime
 from collections import namedtuple
 from dynamicmethod import dynamicmethod
 
@@ -142,6 +143,7 @@ class ProfileManager(CommunicationManager):
         super().__init__(connection=connection, parser=parser, com=com, baudrate=baudrate, **kwargs)
 
         self.INTERNAL_COMMANDS = self.__class__.INTERNAL_COMMANDS
+        self.fmt = '{msg.timestamp:%H:%M:%S.%f}, {msg.voltage} V, {msg.current} A, {msg.power} W'
         self.saved_results = [None] * 2**24
         self.saved_index = 0
         self.profile = Profile()
@@ -152,13 +154,23 @@ class ProfileManager(CommunicationManager):
 
     def print_input(self, msg):
         """The message_parsed callback function that will print ReadInputVoltageCurrentPowerState messages."""
+        start_dt = getattr(self, 'start_dt', None)
+        if start_dt:
+            msg.timeout = msg.timeout - start_dt
+
+        # Save ack messages
         self.save_ack(msg)
 
         if isinstance(msg, ReadInputVoltageCurrentPowerState):
-            print('{} V, {} A, {} W'.format(msg.voltage, msg.current, msg.power))
+            print(self.fmt.format(msg=msg))
 
     def save_input(self, msg):
         """The message_parsed callback function that will save ReadInputVoltageCurrentPowerState messages."""
+        start_dt = getattr(self, 'start_dt', None)
+        if start_dt:
+            msg.timeout = msg.timeout - start_dt
+
+        # Save ack messages
         self.save_ack(msg)
 
         if isinstance(msg, ReadInputVoltageCurrentPowerState):
@@ -289,6 +301,7 @@ class ProfileManager(CommunicationManager):
         self.send_wait(LoadSwitch(operation=1), timeout=1)
 
         # Run and wait for messages
+        self.start_dt = datetime.datetime.now()  # Used in save_input and print_input
         if self.output:
             # If output was set save results to a file
             msgs = self.wait_save_input(timeout, self.sample_time)
@@ -302,9 +315,9 @@ class ProfileManager(CommunicationManager):
 
             # Save results
             with open(self.output, 'a') as f:
-                f.write('Volts,Amps,Watts\n')
+                f.write('Time,Volts,Amps,Watts\n')
                 for msg in msgs:
-                    f.write('{} V, {} A, {} W\n'.format(msg.voltage, msg.current, msg.power))
+                    f.write(self.fmt.format(msg=msg)+'\n')
         else:
             # If no output print
             self.wait_print_input(timeout, self.sample_time)
