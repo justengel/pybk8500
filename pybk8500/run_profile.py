@@ -156,7 +156,7 @@ class ProfileManager(CommunicationManager):
         """The message_parsed callback function that will print ReadInputVoltageCurrentPowerState messages."""
         start_dt = getattr(self, 'start_dt', None)
         if start_dt:
-            msg.timeout = msg.timeout - start_dt
+            msg.timestamp = msg.timestamp - start_dt
 
         # Save ack messages
         self.save_ack(msg)
@@ -168,7 +168,7 @@ class ProfileManager(CommunicationManager):
         """The message_parsed callback function that will save ReadInputVoltageCurrentPowerState messages."""
         start_dt = getattr(self, 'start_dt', None)
         if start_dt:
-            msg.timeout = msg.timeout - start_dt
+            msg.timestamp = msg.timestamp - start_dt
 
         # Save ack messages
         self.save_ack(msg)
