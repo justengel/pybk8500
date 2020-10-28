@@ -384,6 +384,20 @@ def print_status(mngr=None, value='', *args, **kwargs):
     print(value)
 
 
+@ProfileManager.register_internal_command('Sleep')
+def sleep_program(mngr=None, value=None, timeout=None, *args, **kwargs):
+    """Print the Value string."""
+    if not value:
+        value = timeout or 0
+    time.sleep(value)
+
+
+@ProfileManager.register_internal_command('Stop')
+def stop_program(mngr=None, value=None, timeout=None, *args, **kwargs):
+    """Print the Value string."""
+    sys.exit(0)
+
+
 def main(filename, com=None, baudrate=None, connection=None, parser=None):
     """Run the given profile."""
     with ProfileManager(com=com, baudrate=baudrate, connection=connection, parser=parser) as mngr:

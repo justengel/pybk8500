@@ -208,51 +208,46 @@ The CSV of profile commands is defined by "Command", "Value", "Run Time (s)".
 Commands
 --------
 
-  * Comment line by starting the line with "#" or ";"
+ * Comment line by starting the line with "#" or ";"
+ * Internal Commands
 
-  * Internal Commands
+  * "SetupRemote,," - Turn On Remote, Turn Off Load
+  * "TeardownRemote,," - Turn Off Load, Turn Off Remote
+  * "Run,,10 s" - Run the current mode by turning on the load and reading the input for the run time.
+  * "Connect,," - Connect the serial port.
+  * "SampleRate,40," - Set the read input time sample rate (1/value delay after each read).
+  * "SampleTime,0.1," - Set the read input time (value delay after each read).
+  * "BaudRate,38400," - Set the serial port baud rate.
+  * "Com,COM1," - Set the serial com port.
+  * "Port,COM1," - Set the serial com port.
+  * "Output,my_file.csv," - Set the output file for any subsequent runs.
 
-   * "SetupRemote,," - Turn On Remote, Turn Off Load
+   * "Output,," - Print the results for subsequent runs.
 
-   * "TeardownRemote,," - Turn Off Load, Turn Off Remote
+  * "Print,===== Print =====," - Print the value ("===== Print =====") to stdout.
+  * "Sleep,0.1 s," - Sleep the given amount of time
 
-   * "Run,,10 s" - Run the current mode by turning on the load and reading the input for the run time.
+   * "Sleep,,0.1 s" - Sleep with timeout also works
 
-   * "Connect,," - Connect the serial port.
+  * "Stop,," - Stop running the program here. This is a hard stop that can be useful for debugging.
 
-   * "SampleRate,40," - Set the read input time sample rate (1/value delay after each read).
+ * All defined commands in "pybk8500.commands.py" can be used
 
-   * "SampleTime,0.1," - Set the read input time (value delay after each read).
+  * "CC,3 A,100 ms" - Set Constant Current of value (3 A).
 
-   * "BaudRate,38400," - Set the serial port baud rate.
+   * If "Run Time (s)" is given run this mode for the given amount of time.
 
-   * "Com,COM1," - Set the serial com port.
+  * "CV,12 V,1" - Set Constant Voltage of value (12 V).
 
-   * "Port,COM1," - Set the serial com port.
+   * If "Run Time (s)" is given run this mode for the given amount of time.
 
-   * "Output,my_file.csv," - Set the output file for any subsequent runs.
+  * "CW,1,08:00" - Set Constant Power of value (1 W).
 
-    * "Output,," - Print the results for subsequent runs.
+   * If "Run Time (s)" is given run this mode for the given amount of time.
 
-   * "Print,===== Print =====," - Print the value ("===== Print =====") to stdout.
+  * "CR,1,1" - Set Constant Resistance of value (1 Ohm).
 
-  * All defined commands in "pybk8500.commands.py" can be used
-
-   * "CC,3 A,100 ms" - Set Constant Current of value (3 A).
-
-    * If "Run Time (s)" is given run this mode for the given amount of time.
-
-   * "CV,12 V,1" - Set Constant Voltage of value (12 V).
-
-    * If "Run Time (s)" is given run this mode for the given amount of time.
-
-   * "CW,1,08:00" - Set Constant Power of value (1 W).
-
-    * If "Run Time (s)" is given run this mode for the given amount of time.
-
-   * "CR,1,1" - Set Constant Resistance of value (1 Ohm).
-
-    * If "Run Time (s)" is given run this mode for the given amount of time.
+   * If "Run Time (s)" is given run this mode for the given amount of time.
 
 
 Example
