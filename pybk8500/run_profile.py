@@ -215,7 +215,8 @@ class ProfileManager(CommunicationManager):
                 self.write(read_values)
                 time.sleep(time_delay)
 
-        return self.saved_results[: self.saved_index]
+        msgs = self.saved_results[: self.saved_index]
+        return msgs
 
     def load_profile(self, filename):
         """Load the profile"""
@@ -298,6 +299,7 @@ class ProfileManager(CommunicationManager):
                 self.send_wait(SetMode(mode=mode), msg_type=CommandStatus, timeout=1, print_msg=True, print_recv=True)
 
         # Set the load On
+        self.saved_index = 0
         self.send_wait(LoadSwitch(operation=1), timeout=1)
 
         # Run and wait for messages
