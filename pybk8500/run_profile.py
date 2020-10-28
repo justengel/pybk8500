@@ -181,6 +181,19 @@ class ProfileManager(CommunicationManager):
                 self.saved_results.append(msg)
                 self.saved_index += 1
 
+    def send_read(self, time_delay=0.1, read_values=None):
+        """Send a ReadInput message and wait the given time_delay."""
+        if read_values is None:
+            read_values = ReadInputVoltageCurrentPowerState()
+        try:
+            resp_start = time.time()
+            self.send_wait(read_values, timeout=0.1, print_msg=False, print_recv=False, attempts=1)
+            response_time = time.time() - resp_start
+            if time_delay > response_time:
+                time.sleep(time_delay - response_time)
+        except (TimeoutError, ValueError, TypeError, Exception):
+            pass
+
     def wait_print_input(self, timeout=1, time_delay=0.1):
         """Wait the given timeout while printing the input values.
 
@@ -193,8 +206,7 @@ class ProfileManager(CommunicationManager):
         start = time.time()
         with self.change_message_parsed(self.print_input):
             while (time.time() - start) < timeout:
-                self.write(read_values)
-                time.sleep(time_delay)
+                self.send_read(time_delay, read_values=read_values)
 
     def wait_save_input(self, timeout=1, time_delay=0.1):
         """Wait the given timeout while saving the results in a list.
@@ -212,8 +224,7 @@ class ProfileManager(CommunicationManager):
         start = time.time()
         with self.change_message_parsed(self.save_input):
             while (time.time() - start) < timeout:
-                self.write(read_values)
-                time.sleep(time_delay)
+                self.send_read(time_delay, read_values=read_values)
 
         msgs = self.saved_results[: self.saved_index]
         return msgs
