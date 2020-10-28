@@ -308,3 +308,13 @@ Run with python script
 
     # python -m pybk8500.run_profile "./profile.txt"
     main('./profile.txt')
+
+
+Plot the results
+
+.. code-block:: python
+
+    from pybk8500.plot_csv import parse_csv, plot_csv_file, main
+
+    # python -m pybk8500.plot_csv "./profile_results.csv"
+    main('./profile_results.csv')

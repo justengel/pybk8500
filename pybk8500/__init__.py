@@ -52,3 +52,14 @@ except (ImportError, Exception) as err:
     parse_number = ProfileManager
     ProfileRow = ProfileManager
     Profile = ProfileManager
+
+try:
+    from pybk8500.plot_csv import parse_csv, plot_csv_file
+except (ImportError, Exception) as err:
+    class parse_csv(object):
+        error = err
+
+        def __new__(cls, *args, **kwargs):
+            raise EnvironmentError('Missing dependency "matplotlib"! '.format(cls.error)) from cls.error
+
+    plot_csv_file = parse_csv

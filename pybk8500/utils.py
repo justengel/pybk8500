@@ -31,6 +31,10 @@ UNIT_CONVERT = {
     }
 
 
+FIRST_DT = datetime.datetime(1970, 1, 1)
+ZERO_DT = datetime.datetime(1900, 1, 1)
+
+
 def parse_number(value):
     """Try parsing the value into a number.
 
@@ -40,7 +44,10 @@ def parse_number(value):
         for fmt in TIME_FORMATS:
             try:
                 dt = datetime.datetime.strptime(value, fmt)
-                return (dt - datetime.datetime(1900, 1, 1)).total_seconds()
+                if dt.year == ZERO_DT.year:
+                    return (dt - ZERO_DT).total_seconds()
+                else:
+                    return (dt - FIRST_DT).total_seconds()
             except (ValueError, TypeError, Exception):
                 pass
 
