@@ -143,7 +143,7 @@ class ProfileManager(CommunicationManager):
         super().__init__(connection=connection, parser=parser, com=com, baudrate=baudrate, **kwargs)
 
         self.INTERNAL_COMMANDS = self.__class__.INTERNAL_COMMANDS
-        self.fmt = '{msg.timestamp:%H:%M:%S.%f}, {msg.voltage} V, {msg.current} A, {msg.power} W'
+        self.fmt = '{msg.timestamp}, {msg.voltage} V, {msg.current} A, {msg.power} W'
         self.saved_results = [None] * 2**24
         self.saved_index = 0
         self.profile = Profile()
