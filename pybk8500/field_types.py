@@ -1,6 +1,6 @@
 import copy
 import struct
-from bitflags import bitflags
+from bitflags import bitflags, BitFlags
 from collections import OrderedDict
 
 
@@ -339,6 +339,10 @@ class ScalarFloatField(FloatField):
             value = int(value * self.scalar)
         value = self.to_bytes(value, length=self.length, byteorder=self.byteorder, signed=self.signed)
         obj[self.index: self.index + len(value)] = value
+
+
+# Convert BitFlags printing.
+BitFlags.__str__ = BitFlags.__repr__
 
 
 class BitFlagField(IntField):
