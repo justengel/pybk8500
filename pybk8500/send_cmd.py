@@ -333,7 +333,7 @@ class CommunicationManager(object):
         # Clear and return messages
         msgs = [self.ack_list.pop(i) for i in reversed(range(len(self.ack_list)))
                 if msg_type is None or isinstance(self.ack_list[i], msg_type)]
-        msgs = reversed(msgs)
+        msgs = list(reversed(msgs))
 
         if print_recv:
             for msg in msgs:
