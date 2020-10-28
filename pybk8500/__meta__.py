@@ -1,5 +1,5 @@
 name = 'pybk8500'
-version = '0.3.6'
+version = '0.3.7'
 description = 'BK-8500-Electronic-Load python library'
 url = 'https://github.com/justengel/pybk8500'
 author = 'Justin Engel'
