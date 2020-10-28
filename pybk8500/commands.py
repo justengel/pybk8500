@@ -104,6 +104,7 @@ class Message(bytearray):
         return msg_cls
 
     def __init__(self, raw=None, address=None, **kwargs):
+        self.timestamp = datetime.datetime.now()
         self.checksum_needs_updating = False
 
         byts = raw
@@ -126,7 +127,6 @@ class Message(bytearray):
         super().__init__(byts[: self.MSG_LENGTH])
 
         # Set attributes with the given keyword arguments
-        self.timestamp = datetime.datetime.now()
         if address is not None:
             self.address = address
 
