@@ -18,6 +18,17 @@ from pybk8500.parser import Parser
 __all__ = ['CommunicationManager', 'send_msg', 'main']
 
 
+def pop_messages(msg_list, msg_type=None):
+    """Iterate and remove messages with the message type."""
+    off = 0
+    for i in range(len(msg_list)):
+        msg = msg_list[i-off]
+        if msg_type is None or isinstance(msg, msg_type):
+            yield msg
+            msg_list.pop(i-off)
+            off += 1
+
+
 class CommunicationManager(object):
     Parser = Parser
     DEFAULT_READ_SIZE = 26
@@ -301,7 +312,7 @@ class CommunicationManager(object):
             time.sleep(self.wait_delay)
         return False
 
-    def send_wait(self, msg, timeout=0, msg_type=None, attempts=3, print_msg=True, print_recv=True):
+    def send_wait(self, msg, timeout=0, msg_type=None, attempts=3, print_msg=True, print_recv=None):
         """Send a message and wait for a response.
 
         Args:
@@ -310,11 +321,14 @@ class CommunicationManager(object):
             msg_type (Message/object)[None]: Message type class to wait for.
             attempts (int)[3]: Number of attempts to send the message and wait for the response.
             print_msg (bool)[True]: If True print out that you are sending the message.
-            print_recv (bool)[True]: If True print all received messages.
+            print_recv (bool)[print_msg]: If True print all received messages.
 
         Returns:
             ack_list (list): List of received messages.
         """
+        if print_recv is None:
+            print_recv = print_msg
+
         with self.listen_for_messages(msg_type):
             trials = 0
             success = False
@@ -331,9 +345,7 @@ class CommunicationManager(object):
                 raise TimeoutError('Attempts sending {} failed!'.format(msg))
 
         # Clear and return messages
-        msgs = [self.ack_list.pop(i) for i in reversed(range(len(self.ack_list)))
-                if msg_type is None or isinstance(self.ack_list[i], msg_type)]
-        msgs = list(reversed(msgs))
+        msgs = list(pop_messages(self.ack_list, msg_type))
 
         if print_recv:
             for msg in msgs:
