@@ -41,6 +41,7 @@ def parse_number(value):
     If units are given convert to the base unit. If HH:MM:SS then return the number of seconds.
     """
     if ":" in str(value):
+        # Check for date time
         for fmt in TIME_FORMATS:
             try:
                 dt = datetime.datetime.strptime(value, fmt)
@@ -50,6 +51,13 @@ def parse_number(value):
                     return (dt - FIRST_DT).total_seconds()
             except (ValueError, TypeError, Exception):
                 pass
+
+    elif '0x' in str(value):
+        # Check hex value
+        try:
+            return int(value, 16)
+        except (ValueError, TypeError, Exception):
+            pass
 
     # Check regex
     d = NUMBER_UNIT_REGEX.match(value).groupdict()
