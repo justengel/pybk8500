@@ -7,18 +7,11 @@ from dynamicmethod import dynamicmethod
 
 from pybk8500.utils import parse_number
 from pybk8500.send_cmd import CommunicationManager
-from pybk8500 import commands
+from pybk8500.parser import Parser
+from pybk8500.commands import SetRemote, LoadSwitch, ReadInput, SetMode, ReadMode, CommandStatus
 
 
 __all__ = ['parse_number', 'ProfileManager', 'ProfileRow', 'Profile', 'main']
-
-
-SetRemoteOperation = commands.SetRemoteOperation
-LoadSwitch = commands.LoadSwitch
-ReadInputVoltageCurrentPowerState = commands.ReadInputVoltageCurrentPowerState
-SetMode = commands.SetMode
-ReadMode = commands.ReadMode
-CommandStatus = commands.CommandStatus
 
 
 ProfileRow = namedtuple('ProfileRow', ['command', 'value', 'timeout'])
@@ -108,10 +101,13 @@ class Profile(list):
 
 
 class ProfileManager(CommunicationManager):
+
+    Parser = Parser
+
     def setup_remote(self, *args, **kwargs):
         """Start the remote operation and set the load switch to off."""
         # Set to remote (Must start with this command for running remote)
-        cmd = SetRemoteOperation(operation='Remote')  # or operation=1
+        cmd = SetRemote(operation='Remote')  # or operation=1
         self.send_wait(cmd, timeout=1, print_recv=True)
 
         # Set the load Off
@@ -125,7 +121,7 @@ class ProfileManager(CommunicationManager):
         self.send_wait(cmd, timeout=1, print_recv=True)
 
         # Set to front panel
-        cmd = SetRemoteOperation(operation='Front Panel')  # or operation=1
+        cmd = SetRemote(operation='Front Panel')  # or operation=1
         self.send_wait(cmd, timeout=1, print_recv=True)
 
     def __enter__(self):
@@ -153,7 +149,7 @@ class ProfileManager(CommunicationManager):
         self.output = None
 
     def print_input(self, msg):
-        """The message_parsed callback function that will print ReadInputVoltageCurrentPowerState messages."""
+        """The message_parsed callback function that will print ReadInput messages."""
         start_dt = getattr(self, 'start_dt', None)
         if start_dt:
             msg.timestamp = msg.timestamp - start_dt
@@ -161,11 +157,11 @@ class ProfileManager(CommunicationManager):
         # Save ack messages
         self.save_ack(msg)
 
-        if isinstance(msg, ReadInputVoltageCurrentPowerState):
+        if isinstance(msg, ReadInput):
             print(self.fmt.format(msg=msg))
 
     def save_input(self, msg):
-        """The message_parsed callback function that will save ReadInputVoltageCurrentPowerState messages."""
+        """The message_parsed callback function that will save ReadInput messages."""
         start_dt = getattr(self, 'start_dt', None)
         if start_dt:
             msg.timestamp = msg.timestamp - start_dt
@@ -173,7 +169,7 @@ class ProfileManager(CommunicationManager):
         # Save ack messages
         self.save_ack(msg)
 
-        if isinstance(msg, ReadInputVoltageCurrentPowerState):
+        if isinstance(msg, ReadInput):
             if self.saved_index < len(self.saved_results):
                 self.saved_results[self.saved_index] = msg
                 self.saved_index += 1
@@ -184,7 +180,7 @@ class ProfileManager(CommunicationManager):
     def send_read(self, time_delay=0.1, read_values=None):
         """Send a ReadInput message and wait the given time_delay."""
         if read_values is None:
-            read_values = ReadInputVoltageCurrentPowerState()
+            read_values = ReadInput()
         try:
             resp_start = time.time()
             self.send_wait(read_values, timeout=0.1, print_msg=False, print_recv=False, attempts=1)
@@ -201,7 +197,7 @@ class ProfileManager(CommunicationManager):
             timeout (float/int): Timeout in seconds
             time_delay (float/int): Time (in seconds) to wait until sending the next request for the input values.
         """
-        read_values = ReadInputVoltageCurrentPowerState()
+        read_values = ReadInput()
 
         start = time.time()
         with self.change_message_parsed(self.print_input):
@@ -216,9 +212,9 @@ class ProfileManager(CommunicationManager):
             time_delay (float/int): Time (in seconds) to wait until sending the next request for the input values.
 
         Returns:
-            msgs (list): List of ReadInputVoltageCurrentPowerState messages.
+            msgs (list): List of ReadInput messages.
         """
-        read_values = ReadInputVoltageCurrentPowerState()
+        read_values = ReadInput()
         self.saved_index = 0
 
         start = time.time()
@@ -263,7 +259,7 @@ class ProfileManager(CommunicationManager):
                 if callable(cmd):
                     cmd(self, row.value, timeout=row.timeout)
             else:
-                cmd_type = getattr(commands, row.command)
+                cmd_type = self.parser.lookup(row.command)  # getattr(commands, row.command)
                 if row.value or isinstance(row.value, int):
                     msg = cmd_type(value=row.value)
                 else:

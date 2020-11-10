@@ -12,7 +12,7 @@ from pybk8500.parser import Parser
 
 __all__ = [
     'Message', 'CC_Commands', 'CV_Commands', 'CW_Commands', 'CR_Commands',
-    'CommandStatus', 'SetRemoteOperation', 'RemoteOn', 'RemoteOff', 'LoadSwitch', 'LoadOn', 'LoadOff',
+    'CommandStatus', 'SetRemote', 'SetRemoteOperation', 'RemoteOn', 'RemoteOff', 'LoadSwitch', 'LoadOn', 'LoadOff',
     'SetMaxVoltage', 'ReadMaxVoltage', 'SetMaxCurrent', 'ReadMaxCurrent', 'SetMaxPower', 'ReadMaxPower',
     'SetMode', 'ReadMode',
     'CC', 'SetCCModeCurrent', 'ReadCCModeCurrent', 'SetModeCurrent', 'ReadModeCurrent',
@@ -30,14 +30,13 @@ __all__ = [
     'ReadTimerValueForLoadOn', 'SetTimerStateLoadOn', 'ReadTimerStateLoadOn', 'SetCommunicationAddress',
     'SetLocalControlState', 'SetRemoteSensingState', 'ReadRemoteSensingState', 'SelectTriggerSource',
     'ReadTriggerSource', 'TriggerElectronicLoad', 'SaveDCLoadSettings', 'RecallDCLoadSettings', 'SelectFunctionType',
-    'GetFunctionType', 'ReadInputVoltageCurrentPowerState', 'ReadInput', 'GetProductInfo', 'ReadBarCode'
+    'GetFunctionType', 'ReadInput', 'ReadInputVoltageCurrentPowerState', 'GetProductInfo', 'ReadBarCode'
     ]
 
 
 class Message(bytearray):
     """Message type object"""
     ID = 0
-    NAME = 'Base Command'
 
     RESPONSE_TYPE = None
     REPR_EXCLUDE = []
@@ -166,7 +165,6 @@ class Message(bytearray):
 class CommandStatus(Message):
     """Indicates a return packet for a command sent to the DC Load"""
     ID = 0x12
-    NAME = 'Command Status'
 
     # 3 Status byte (i.e., status of last command sent to DC Load).
     STATUS_NAMES = {'Checksum incorrect': 0x90,
@@ -185,10 +183,9 @@ Message.RESPONSE_TYPE = CommandStatus
 
 
 @Parser.add_lookup
-class SetRemoteOperation(Message):
+class SetRemote(Message):
     """Set the DC Load to remote operation"""
     ID = 0x20
-    NAME = 'Set Remote Operation'
     RESPONSE_TYPE = CommandStatus
 
     OPERATION_NAMES = {'Front Panel': 0, 'Remote': 1}
@@ -196,18 +193,19 @@ class SetRemoteOperation(Message):
     value = operation  # Alias so Message(value=1) can be used
 
 
-class RemoteOn(SetRemoteOperation):
-    NAME = 'Remote On'
+SetRemoteOperation = Parser.add_lookup(SetRemote, msg_id=False, msg_name='SetRemoteOperation')
 
+
+@Parser.add_lookup(msg_id=False, msg_name='RemoteOn')  # Add name do not overwrite ID
+class RemoteOn(SetRemoteOperation):
     def __init__(self, *args, **kwargs):
         if 'value' not in kwargs and 'operation' not in kwargs:
             kwargs['value'] = 1
         super().__init__(*args, **kwargs)
 
 
+@Parser.add_lookup(msg_id=False, msg_name='RemoteOff')  # Add name do not overwrite ID
 class RemoteOff(SetRemoteOperation):
-    NAME = 'Remote Off'
-
     def __init__(self, *args, **kwargs):
         if 'value' not in kwargs and 'operation' not in kwargs:
             kwargs['value'] = 0
@@ -218,25 +216,22 @@ class RemoteOff(SetRemoteOperation):
 class LoadSwitch(Message):
     """Load switch to turn the load on or off"""
     ID = 0x21
-    NAME = 'Load Switch'
 
     SWITCH_NAMES = {'Off': 0, 'On': 1}
     operation = Int8Field('operation', 3, d_names=SWITCH_NAMES)
     value = operation  # Alias so Message(value=1) can be used
 
 
+@Parser.add_lookup(msg_id=False, msg_name='LoadOn')  # Add name do not overwrite ID
 class LoadOn(LoadSwitch):
-    NAME = 'Load On'
-
     def __init__(self, *args, **kwargs):
         if 'value' not in kwargs and 'operation' not in kwargs:
             kwargs['value'] = 1
         super().__init__(*args, **kwargs)
 
 
+@Parser.add_lookup(msg_id=False, msg_name='LoadOff')  # Add name do not overwrite ID
 class LoadOff(LoadSwitch):
-    NAME = 'Load Off'
-
     def __init__(self, *args, **kwargs):
         if 'value' not in kwargs and 'operation' not in kwargs:
             kwargs['value'] = 0
@@ -247,7 +242,6 @@ class LoadOff(LoadSwitch):
 class SetMaxVoltage(Message):
     """Set the maximum voltage allowed"""
     ID = 0x22
-    NAME = 'Set Max Voltage'
 
     voltage = ScalarFloatField('voltage', 3, length=4, scalar=1000)  # 1mV
     value = voltage  # Alias so Message(value=1) can be used
@@ -258,14 +252,12 @@ class SetMaxVoltage(Message):
 class ReadMaxVoltage(SetMaxVoltage):
     """Read the maximum voltage allowed"""
     ID = 0x23
-    NAME = 'Read Max Voltage'
 
 
 @Parser.add_lookup
 class SetMaxCurrent(Message):
     """Set the maximum current allowed"""
     ID = 0x24
-    NAME = 'Set Max Current'
 
     current = ScalarFloatField('current', 3, length=4, scalar=10000)  # 0.1 mA
     value = current  # Alias so Message(value=1) can be used
@@ -276,14 +268,12 @@ class SetMaxCurrent(Message):
 class ReadMaxCurrent(SetMaxCurrent):
     """Read the maximum current allowed"""
     ID = 0x25
-    NAME = 'Read Max Current'
 
 
 @Parser.add_lookup
 class SetMaxPower(Message):
     """Set the maximum power allowed"""
     ID = 0x26
-    NAME = 'Set Max Power'
 
     power = ScalarFloatField('power', 3, length=4, scalar=1000)  # 1 mW
     value = power  # Alias so Message(value=1) can be used
@@ -294,14 +284,12 @@ class SetMaxPower(Message):
 class ReadMaxPower(SetMaxPower):
     """Read the maximum current allowed"""
     ID = 0x27
-    NAME = 'Read Max Power'
 
 
 @Parser.add_lookup
 class SetMode(Message):
     """Set CC, CV, CW, or CR mode"""
     ID = 0x28
-    NAME = 'Set Mode'
 
     MODE_NAMES = {'CC': 0, 'CV': 1, 'CW': 2, 'CR': 3}
     mode = Int8Field('mode', 3, d_names=MODE_NAMES)
@@ -313,14 +301,12 @@ class SetMode(Message):
 class ReadMode(SetMode):
     """Read the mode being used (CC, CV, CW, or CR)"""
     ID = 0x29
-    NAME = 'Read Mode'
 
 
 @Parser.add_lookup
 class SetCCModeCurrent(Message):
     """Set CC mode current"""
     ID = 0x2A
-    NAME = 'Set CC Mode Current'
 
     MODE_TYPE = 'CC'
 
@@ -333,19 +319,17 @@ class SetCCModeCurrent(Message):
 class ReadCCModeCurrent(SetCCModeCurrent):
     """Read CC mode current"""
     ID = 0x2B
-    NAME = 'Read CC Mode Current'
 
 
-CC = SetCCModeCurrent
-SetModeCurrent = SetCCModeCurrent
-ReadModeCurrent = ReadCCModeCurrent
+CC = Parser.add_lookup(SetCCModeCurrent, msg_id=False, msg_name='CC')  # Add name do not overwrite ID
+SetModeCurrent = Parser.add_lookup(SetCCModeCurrent, msg_id=False, msg_name='SetModeCurrent')
+ReadModeCurrent = Parser.add_lookup(ReadCCModeCurrent, msg_id=False, msg_name='ReadModeCurrent')
 
 
 @Parser.add_lookup
 class SetCVModeVoltage(Message):
     """Set CV mode voltage"""
     ID = 0x2C
-    NAME = 'Set CV Mode Voltage'
 
     MODE_TYPE = 'CV'
 
@@ -358,19 +342,17 @@ class SetCVModeVoltage(Message):
 class ReadCVModeVoltage(SetCVModeVoltage):
     """Read CV mode voltage"""
     ID = 0x2D
-    NAME = 'Read CV Mode Voltage'
 
 
-CV = SetCVModeVoltage
-SetModeVoltage = SetCVModeVoltage
-ReadModeVoltage = ReadCVModeVoltage
+CV = Parser.add_lookup(SetCVModeVoltage, msg_id=False, msg_name='CV')  # Add name do not overwrite ID
+SetModeVoltage = Parser.add_lookup(SetCVModeVoltage, msg_id=False, msg_name='SetModeVoltage')
+ReadModeVoltage = Parser.add_lookup(ReadCVModeVoltage, msg_id=False, msg_name='ReadModeVoltage')
 
 
 @Parser.add_lookup
 class SetCWModePower(Message):
     """Set CW mode power"""
     ID = 0x2E
-    NAME = 'Set CW Mode Power'
 
     MODE_TYPE = 'CW'
 
@@ -383,19 +365,17 @@ class SetCWModePower(Message):
 class ReadCWModePower(SetCWModePower):
     """Read CW mode power"""
     ID = 0x2F
-    NAME = 'Read CW Mode Power'
 
 
-CW = SetCWModePower
-SetModePower = SetCWModePower
-ReadModePower = ReadCWModePower
+CW = Parser.add_lookup(SetCWModePower, msg_id=False, msg_name='CW')
+SetModePower = Parser.add_lookup(SetCWModePower, msg_id=False, msg_name='SetModePower')
+ReadModePower = Parser.add_lookup(ReadCWModePower, msg_id=False, msg_name='ReadModePower')
 
 
 @Parser.add_lookup
 class SetCRModeResistance(Message):
     """Set CR mode resistance"""
     ID = 0x30
-    NAME = 'Set CR Mode Resistance'
 
     MODE_TYPE = 'CR'
 
@@ -408,12 +388,11 @@ class SetCRModeResistance(Message):
 class ReadCRModeResistance(SetCRModeResistance):
     """Read CR mode resistance"""
     ID = 0x31
-    NAME = 'Read CR Mode Resistance'
 
 
-CR = SetCRModeResistance
-SetModeResistance = SetCRModeResistance
-ReadModeResistance = ReadCRModeResistance
+CR = Parser.add_lookup(SetCRModeResistance, msg_id=False, msg_name='CR')
+SetModeResistance = Parser.add_lookup(SetCRModeResistance, msg_id=False, msg_name='SetModeResistance')
+ReadModeResistance = Parser.add_lookup(ReadCRModeResistance, msg_id=False, msg_name='ReadModeResistance')
 
 
 @Parser.add_lookup
@@ -428,7 +407,6 @@ class SetCCModeTransientCurrentAndTiming(Message):
         operation (int/str)[0]: {'CONTINUOUS': 0, 'PULSE': 1, 'TOGGLED': 2}
     """
     ID = 0x32
-    NAME = 'Set CC Mode Transient Current and Timing'
 
     MODE_TYPE = 'CC'
 
@@ -456,14 +434,12 @@ class SetCCModeTransientCurrentAndTiming(Message):
 class ReadCCModeTransientParameters(SetCCModeTransientCurrentAndTiming):
     """Read CC mode transient parameters"""
     ID = 0x33
-    NAME = 'Read CC Mode Transient Parameters'
 
 
 @Parser.add_lookup
 class SetCVModeTransientVoltageAndTiming(Message):
     """Set CV mode transient voltage and timing"""
     ID = 0x34
-    NAME = 'Set CV Mode Transient Voltage and Timing'
 
     MODE_TYPE = 'CV'
 
@@ -491,14 +467,12 @@ class SetCVModeTransientVoltageAndTiming(Message):
 class ReadCVModeTransientParameters(SetCVModeTransientVoltageAndTiming):
     """Read CV mode transient parameters"""
     ID = 0x35
-    NAME = 'Read CV Mode Transient Parameters'
 
 
 @Parser.add_lookup
 class SetCWModeTransientPowerAndTiming(Message):
     """Set CW mode transient power and timing"""
     ID = 0x36
-    NAME = 'Set CW Mode Transient Power and Timing'
 
     MODE_TYPE = 'CW'
 
@@ -526,14 +500,12 @@ class SetCWModeTransientPowerAndTiming(Message):
 class ReadCWModeTransientParameters(SetCWModeTransientPowerAndTiming):
     """Read CW mode transient parameters"""
     ID = 0x37
-    NAME = 'Read CW Mode Transient Parameters'
 
 
 @Parser.add_lookup
 class SetCRModeTransientResistanceAndTiming(Message):
     """Set CR mode transient resistance and timing"""
     ID = 0x38
-    NAME = 'Set CR Mode Transient Resistance and Timing'
 
     MODE_TYPE = 'CR'
 
@@ -561,14 +533,12 @@ class SetCRModeTransientResistanceAndTiming(Message):
 class ReadCRModeTransientParameters(SetCRModeTransientResistanceAndTiming):
     """Read CR mode transient parameters"""
     ID = 0x39
-    NAME = 'Read CR Mode Transient Parameters'
 
 
 @Parser.add_lookup
 class SelectListOperation(Message):
     """Select the list operation (CC/CV/CW/CR)"""
     ID = 0x3A
-    NAME = 'Select List Operation'
 
     OPERATION_NAMES = {'CC': 0,  # 'Constant Current (CC)': 0,
                        'CV': 1,  # 'Constant Voltage (CV)': 1,
@@ -584,14 +554,12 @@ class SelectListOperation(Message):
 class ReadListOperation(SelectListOperation):
     """Read the list operation (CC/CV/CW/CR)"""
     ID = 0x3B
-    NAME = 'Read List Operation'
 
 
 @Parser.add_lookup
 class SetHowListsRepeat(Message):
     """Set how lists repeat (ONCE or REPEAT)"""
     ID = 0x3C
-    NAME = 'Set Lists Repeat'
 
     REPEAT_NAMES = {'Once': 0, 'Repeat': 1}
     repeat = Int8Field('repeat', 3, d_names=REPEAT_NAMES)
@@ -603,14 +571,12 @@ class SetHowListsRepeat(Message):
 class ReadHowListsRepeat(SetHowListsRepeat):
     """Read how lists repeat (ONCE or REPEAT)"""
     ID = 0x3D
-    NAME = 'Read Lists Repeat'
 
 
 @Parser.add_lookup
 class SetNumberOfSteps(Message):
     """Set the number of list steps"""
     ID = 0x3E
-    NAME = 'Set Number Of Steps'
 
     # 3 to 4 2 byte little-endian integer for number of steps
     steps = Int16Field('steps', 3)
@@ -622,14 +588,12 @@ class SetNumberOfSteps(Message):
 class ReadNumberOfSteps(SetNumberOfSteps):
     """Read the number of list steps"""
     ID = 0x3F
-    NAME = 'Read Number Of Steps'
 
 
 @Parser.add_lookup
 class SetOneStepCurrentAndTime(Message):
     """Set one of the step's current and time values"""
     ID = 0x40
-    NAME = 'Set One Of Steps Current And Time Values'
 
     MODE_TYPE = 'CC'
 
@@ -649,14 +613,12 @@ class SetOneStepCurrentAndTime(Message):
 class ReadOneStepCurrentAndTime(SetOneStepCurrentAndTime):
     """Read one of the step's current and time values"""
     ID = 0x41
-    NAME = 'Read One Step Current And Time'
 
 
 @Parser.add_lookup
 class SetOneStepVoltageAndTime(Message):
     """Set one of the step's voltage and time values"""
     ID = 0x42
-    NAME = 'Set One Of Steps Voltage And Time Values'
 
     MODE_TYPE = 'CV'
 
@@ -676,14 +638,12 @@ class SetOneStepVoltageAndTime(Message):
 class ReadOneStepVoltageAndTime(SetOneStepVoltageAndTime):
     """Read one of the step's voltage and time values"""
     ID = 0x43
-    NAME = 'Read One Step Voltage And Time'
 
 
 @Parser.add_lookup
 class SetOneStepPowerAndTime(Message):
     """Set one of the step's power and time values"""
     ID = 0x44
-    NAME = 'Set One Of Steps Power And Time Values'
 
     MODE_TYPE = 'CW'
 
@@ -703,14 +663,12 @@ class SetOneStepPowerAndTime(Message):
 class ReadOneStepPowerAndTime(SetOneStepPowerAndTime):
     """Read one of the step's power and time values"""
     ID = 0x45
-    NAME = 'Read One Step Power And Time'
 
 
 @Parser.add_lookup
 class SetOneStepResistanceAndTime(Message):
     """Set one of the step's resistance and time values"""
     ID = 0x46
-    NAME = 'Set One Of Steps Resistance And Time Values'
 
     MODE_TYPE = 'CR'
 
@@ -730,14 +688,12 @@ class SetOneStepResistanceAndTime(Message):
 class ReadOneStepResistanceAndTime(SetOneStepResistanceAndTime):
     """Read one of the step's resistance and time values"""
     ID = 0x47
-    NAME = 'Read One Step Resistance And Time'
 
 
 @Parser.add_lookup
 class SetListFileName(Message):
     """Set the list file name"""
     ID = 0x48
-    NAME = 'Set List File Name'
 
     # 3 to 12 List file name (ASCII characters)
     filename = StrField('filename', 3, length=10)
@@ -749,14 +705,12 @@ class SetListFileName(Message):
 class ReadListFileName(SetListFileName):
     """Read the list file name"""
     ID = 0x49
-    NAME = 'Read List File Name'
 
 
 @Parser.add_lookup
 class SetMemoryPartition(Message):
     """Set the memory partitioning for storing lists"""
     ID = 0x4A
-    NAME = 'Set Memory Partition'
 
     SCHEME_NAMES = {'1 file of 1000 list steps': 1,
                     '2 files of 500 list steps': 2,
@@ -775,14 +729,12 @@ class SetMemoryPartition(Message):
 class ReadMemoryPartition(SetMemoryPartition):
     """Read the memory partitioning for storing list steps"""
     ID = 0x4B
-    NAME = 'Read Memory Partition'
 
 
 @Parser.add_lookup
 class SaveListFile(Message):
     """Save the list file"""
     ID = 0x4C
-    NAME = 'Save List File'
 
     # Storage location, a one byte integer from 1 to 8. This number must be
     # consistent with the number of list files allowed as set by the 0x4A command.
@@ -795,14 +747,12 @@ class SaveListFile(Message):
 class RecallListFile(SaveListFile):
     """Recall the list file"""
     ID = 0x4D
-    NAME = 'Recall List File'
 
 
 @Parser.add_lookup
 class SetMinimumVoltage(Message):
     """Set minimum voltage in battery testing"""
     ID = 0x4E
-    NAME = 'Set Minimum Voltage'
 
     # 3 to 6 4 byte little-endian integer specifying the minimum voltage in units of 1 mV
     voltage = ScalarFloatField('voltage', 3, length=4, scalar=1000)  # 1 mV
@@ -814,14 +764,12 @@ class SetMinimumVoltage(Message):
 class ReadMinimumVoltage(SetMinimumVoltage):
     """Read minimum voltage in battery testing"""
     ID = 0x4F
-    NAME = 'Read Minimum Voltage'
 
 
 @Parser.add_lookup
 class SetTimerValueForLoadOn(Message):
     """Set timer value of for LOAD ON"""
     ID = 0x50
-    NAME = 'Set Timer Value For Load On'
 
     # 2 byte little-endian integer specifying the time in units of 1 second
     seconds = Int16Field('seconds', 3)
@@ -833,14 +781,12 @@ class SetTimerValueForLoadOn(Message):
 class ReadTimerValueForLoadOn(SetTimerValueForLoadOn):
     """Read timer value for LOAD ON"""
     ID = 0x51
-    NAME = 'Read Timer Value For Load On'
 
 
 @Parser.add_lookup
 class SetTimerStateLoadOn(Message):
     """Disable/enable timer for LOAD ON"""
     ID = 0x52
-    NAME = 'Set Timer State Load On'
 
     STATE_NAMES = {'disabled': 0, 'enabled': 1}
     state = Int8Field('state', 3, d_names=STATE_NAMES)
@@ -852,14 +798,12 @@ class SetTimerStateLoadOn(Message):
 class ReadTimerStateLoadOn(SetTimerStateLoadOn):
     """Read timer state for LOAD ON"""
     ID = 0x53
-    NAME = 'Read Timer State Load On'
 
 
 @Parser.add_lookup
 class SetCommunicationAddress(Message):
     """Set communication address"""
     ID = 0x54
-    NAME = 'Set Communication Address'
 
     # 2 byte little-endian integer specifying the address. Must be between 0 and 0xFE, inclusive.
     com_address = Int8Field('com_address', 3)
@@ -870,7 +814,6 @@ class SetCommunicationAddress(Message):
 class SetLocalControlState(Message):
     """Enable/disable LOCAL control"""
     ID = 0x55
-    NAME = 'Set Local Control State'
 
     # 0 means to disable the Local key on the front panel
     # 1 means to enable the Local key on the front panel
@@ -883,7 +826,6 @@ class SetLocalControlState(Message):
 class SetRemoteSensingState(Message):
     """Enable/disable remote sensing"""
     ID = 0x56
-    NAME = 'Set Remote Sensing State'
 
     # 0 means to disable remote sensing
     # 1 means to enable remote sensing
@@ -897,14 +839,12 @@ class SetRemoteSensingState(Message):
 class ReadRemoteSensingState(SetRemoteSensingState):
     """Read the state of remote sensing"""
     ID = 0x57
-    NAME = 'Set Remote Sensing State'
 
 
 @Parser.add_lookup
 class SelectTriggerSource(Message):
     """Select trigger source"""
     ID = 0x58
-    NAME = 'Select Trigger Source'
 
     # 0 means immediate trigger (i.e., triggered from the front panel)
     # 1 means external trigger from the rear panel connector
@@ -919,21 +859,18 @@ class SelectTriggerSource(Message):
 class ReadTriggerSource(SelectTriggerSource):
     """Read trigger source"""
     ID = 0x59
-    NAME = 'Read Trigger Source'
 
 
 @Parser.add_lookup
 class TriggerElectronicLoad(Message):
     """Trigger the electronic load"""
     ID = 0x5A
-    NAME = 'Select Trigger Source'
 
 
 @Parser.add_lookup
 class SaveDCLoadSettings(Message):
     """Save DC Load's settings"""
     ID = 0x5B
-    NAME = 'Save DC Load Settings'
 
     # Storage register, a number between 1 and 25 inclusive
     storage_register = Int8Field('storage_register', 3)
@@ -945,14 +882,12 @@ class SaveDCLoadSettings(Message):
 class RecallDCLoadSettings(SaveDCLoadSettings):
     """Recall DC Load's settings"""
     ID = 0x5C
-    NAME = 'Recall DC Load Settings'
 
 
 @Parser.add_lookup
 class SelectFunctionType(Message):
     """Select FIXED/SHORT/TRAN/LIST/BATTERY function"""
     ID = 0x5D
-    NAME = 'Select Function Type'
 
     FUNCTION_NAMES = {'Fixed': 0, 'Short': 1, 'Transient': 2, 'List': 3, 'Battery': 4, }
     function = Int8Field('function', 3, d_names=FUNCTION_NAMES)
@@ -964,14 +899,12 @@ class SelectFunctionType(Message):
 class GetFunctionType(SelectFunctionType):
     """Get function type (FIXED/SHORT/TRAN/LIST/BATTERY)"""
     ID = 0x5E
-    NAME = 'Get Function Type'
 
 
 @Parser.add_lookup
-class ReadInputVoltageCurrentPowerState(Message):
+class ReadInput(Message):
     """Read input voltage, current, power and relative state"""
     ID = 0x5F
-    NAME = 'Read Input Voltage Current Power State'
 
     REPR_EXCLUDE = ['operation_register', 'demand_register']
 
@@ -1013,14 +946,13 @@ class ReadInputVoltageCurrentPowerState(Message):
                                        })
 
 
-ReadInput = ReadInputVoltageCurrentPowerState
+ReadInputVoltageCurrentPowerState = Parser.add_lookup(ReadInput, msg_id=False, msg_name='ReadInputVoltageCurrentPowerState')
 
 
 @Parser.add_lookup
 class GetProductInfo(Message):
     """Get product's model, serial number, and firmware version"""
     ID = 0x6A
-    NAME = 'Get Product Info'
 
     # 3 to 7 ASCII model information
     model = StrField('model', 3, length=5)
@@ -1037,7 +969,6 @@ class GetProductInfo(Message):
 class ReadBarCode(Message):
     """Read the bar code information"""
     ID = 0x6B
-    NAME = 'Read Bar Code'
 
     # 3 to 5 Identity
     identity = StrField('identity', 3, length=3)

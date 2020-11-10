@@ -9,7 +9,7 @@ from pybk8500.parser import ChecksumError, MessageTypeError, Parser
 
 from pybk8500.commands import \
     Message, CC_Commands, CV_Commands, CW_Commands, CR_Commands, \
-    CommandStatus, SetRemoteOperation, RemoteOn, RemoteOff, LoadSwitch, LoadOn, LoadOff, \
+    CommandStatus, SetRemote, SetRemoteOperation, RemoteOn, RemoteOff, LoadSwitch, LoadOn, LoadOff, \
     SetMaxVoltage, ReadMaxVoltage, SetMaxCurrent, ReadMaxCurrent, SetMaxPower, ReadMaxPower, \
     SetMode, ReadMode, \
     CC, SetCCModeCurrent, ReadCCModeCurrent, SetModeCurrent, ReadModeCurrent, \
@@ -27,7 +27,7 @@ from pybk8500.commands import \
     ReadTimerValueForLoadOn, SetTimerStateLoadOn, ReadTimerStateLoadOn, SetCommunicationAddress, \
     SetLocalControlState, SetRemoteSensingState, ReadRemoteSensingState, SelectTriggerSource, \
     ReadTriggerSource, TriggerElectronicLoad, SaveDCLoadSettings, RecallDCLoadSettings, SelectFunctionType, \
-    GetFunctionType, ReadInputVoltageCurrentPowerState, ReadInput, GetProductInfo, ReadBarCode
+    GetFunctionType, ReadInput, ReadInputVoltageCurrentPowerState, GetProductInfo, ReadBarCode
 
 
 try:

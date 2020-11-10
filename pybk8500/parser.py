@@ -228,14 +228,26 @@ class Parser(object):
         return self.msg_types_lookup.get(msg_id, None)
 
     @dynamicmethod
-    def add_lookup(self, msg_type, msg_id=None, msg_name=None):
+    def add_lookup(self, msg_type=None, msg_id=None, msg_name=None):
         """Add a custom external message type (that the Packet can parse) to the lookup function.
 
         Args:
-            msg_type (MessageType/class): Message type class that you want to add
-            msg_id (str/bytes/int)[None]: Message ID. If this is not given it will use msg_type.ID
-            msg_name (str)[None]: Message type display name. If this is not given it will use msg_type.NAME
+            msg_type (MessageType/class/type): Message type class that you want to add
+            msg_id (str/bytes/int/bool)[None]: Message ID. If this is not given it will use msg_type.ID
+            msg_name (str/bool)[None]: Message type display name. If this is not given it will use msg_type.NAME
+
+        Returns:
+            msg_type (MessageType/class/type): Message type that was added.
+
+        Returns:
+            decorator (function/callable): Only returns this decorator function if a 'msg_type' was not given!
         """
+        # If message type not given return a decorator
+        if msg_type is None:
+            def decorator(msg_type, msg_id=msg_id, msg_name=msg_name):
+                return self.add_lookup(msg_type, msg_id, msg_name)
+            return decorator
+
         if msg_id is None:
             try:
                 msg_id = msg_type.ID
@@ -243,7 +255,7 @@ class Parser(object):
                 pass
         if msg_name is None:
             try:
-                msg_name = msg_type.NAME
+                msg_name = msg_type.__name__
             except AttributeError:
                 pass
 
@@ -270,7 +282,7 @@ class Parser(object):
                 pass
         if msg_name is None:
             try:
-                msg_name = msg_type.NAME
+                msg_name = msg_type.__name__
             except AttributeError:
                 pass
 

@@ -39,7 +39,7 @@ Send a command to a serial port and wait for a response.
 
 .. code-block:: bash
 
-    python -m pybk8500.send_cmd "COM1" 9600 "Command Status" --address 1
+    python -m pybk8500.send_cmd "COM1" 9600 "RemoteOn" --address 1
     # will send the command down a serial port and wait for a response
 
 The command ID can be the string NAME or integer ID.
@@ -47,13 +47,13 @@ The command ID can be the string NAME or integer ID.
 .. code-block:: bash
 
     # cmd_id as str
-    python -m pybk8500.send_cmd "COM1" 9600 "Command Status" --address 1
+    python -m pybk8500.send_cmd "COM1" 9600 "SetRemote" --value 1 --address 1
 
     # cmd_id as hex
-    python -m pybk8500.send_cmd "COM1" 9600 0x12 --address 1
+    python -m pybk8500.send_cmd "COM1" 9600 0x20 --value 1 --address 1
 
     # cmd_id as decimal
-    python -m pybk8500.send_cmd "COM1" 9600 18 --address 1
+    python -m pybk8500.send_cmd "COM1" 9600 32 --value 1 --address 1
 
 
 Parser
@@ -192,7 +192,9 @@ The CSV of profile commands is defined by "Command", "Value", "Run Time (s)".
 
   * Command - Name of the command you want to send.
 
-   * Runs any command in "pybk8500.commands" as well as predefined custom internal commands.
+   * Runs any command registered in "pybk8500.Parser.lookup" as well as predefined custom internal commands.
+
+   * Commands can be a name "SetRemote", hex value "0x20", or decimal value 32.
 
   * Value - Value to pass into the command.
 
