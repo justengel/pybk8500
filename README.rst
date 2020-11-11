@@ -316,7 +316,16 @@ Plot the results
 
 .. code-block:: python
 
-    from pybk8500.plot_csv import parse_csv, plot_csv_file, main
+    from pybk8500 import parse_csv, plot_csv_file, plot_csv_files
 
     # python -m pybk8500.plot_csv "./profile_results.csv"
-    main('./profile_results.csv')
+    plot_csv_files('./profile_results.csv', './profile_results2.csv')
+
+Combine csv files.
+
+.. code-block:: python
+
+    from pybk8500 import combine_csv_files
+
+    # python -m pybk8500.combine_csv "./profile_results.csv" "./profile_results2.csv"
+    combine_csv_files('./profile_results.csv', './profile_results2.csv')
