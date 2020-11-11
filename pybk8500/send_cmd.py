@@ -59,6 +59,7 @@ class CommunicationManager(object):
         for k, v in kwargs.items():
             setattr(self, k, v)
 
+        self.ack_lock = continuous_threading.RLock()
         self.ack_list = []
         self.response_types = []
         self.connection = connection
@@ -84,7 +85,8 @@ class CommunicationManager(object):
     def save_ack(self, msg):
         """Save the response messages in the available response_types."""
         if len(self.response_types) == 0 or any(isinstance(msg, rtype) for rtype in self.response_types):
-            self.ack_list.append(msg)
+            with self.ack_lock:
+                self.ack_list.append(msg)
 
     message_parsed = save_ack
 
@@ -202,7 +204,8 @@ class CommunicationManager(object):
 
     def flush(self):
         """Clear the message buffer and input buffer."""
-        self.ack_list.clear()
+        with self.ack_lock:
+            self.ack_list.clear()
         try:
             self.connection.flush()
         except (AttributeError, Exception):
@@ -307,8 +310,10 @@ class CommunicationManager(object):
         """
         start = time.time()
         while (time.time() - start) < timeout:
-            if (msg_type is None and len(self.ack_list) > 0) or any(isinstance(msg, msg_type) for msg in self.ack_list):
-                return True
+            with self.ack_lock:
+                if (msg_type is None and len(self.ack_list) > 0) or \
+                        any(isinstance(msg, msg_type) for msg in self.ack_list):
+                    return True
             time.sleep(self.wait_delay)
         return False
 
@@ -345,7 +350,8 @@ class CommunicationManager(object):
                 raise TimeoutError('Attempts sending {} failed!'.format(msg))
 
         # Clear and return messages
-        msgs = list(pop_messages(self.ack_list, msg_type))
+        with self.ack_lock:
+            msgs = list(pop_messages(self.ack_list, msg_type))
 
         if print_recv:
             for msg in msgs:
@@ -438,7 +444,8 @@ def send_msg(com, baudrate, cmd_id, timeout=1, attempts=1, **kwargs):
             msgs = ser.send_wait(cmd, timeout=timeout, msg_type=cmd.RESPONSE_TYPE, attempts=attempts)
         except TimeoutError:
             # Timeout error with no response for the expected type.
-            msgs = [ser.ack_list.pop(0) for _ in range(len(ser.ack_list))]
+            with ser.ack_lock:
+                msgs = [ser.ack_list.pop(0) for _ in range(len(ser.ack_list))]
 
         for msg in msgs:
             print('Received {}:'.format(msg.NAME))
