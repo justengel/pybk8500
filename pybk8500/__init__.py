@@ -54,7 +54,7 @@ except (ImportError, Exception) as err:
     Profile = ProfileManager
 
 try:
-    from pybk8500.plot_csv import parse_csv, plot_csv_file
+    from pybk8500.plot_csv import parse_csv, plot_csv_file, plot_csv_files
 except (ImportError, Exception) as err:
     class parse_csv(object):
         error = err
@@ -63,3 +63,13 @@ except (ImportError, Exception) as err:
             raise EnvironmentError('Missing dependency "matplotlib"! '.format(cls.error)) from cls.error
 
     plot_csv_file = parse_csv
+    plot_csv_files = parse_csv
+
+try:
+    from pybk8500.combine_csv import combine_csv_files
+except (ImportError, Exception) as err:
+    class combine_csv_files(object):
+        error = err
+
+        def __new__(cls, *args, **kwargs):
+            raise EnvironmentError('Missing dependency "matplotlib"! '.format(cls.error)) from cls.error
