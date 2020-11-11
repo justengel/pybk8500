@@ -32,19 +32,19 @@ def combine_csv_files(*files, output=None, skip_headers=True):
         output = get_filename(*files)
 
     with open(output, 'wb') as o:
-        for file in files:
+        for i, file in enumerate(files):
             if isinstance(file, str):
                 # Open the file and write contents
                 with open(file, 'rb') as f:
                     for line in f:
-                        if not skip_headers or b'Time' not in line:
+                        if (not skip_headers or i == 0) or b'Time' not in line:
                             o.write(line)
             else:
                 # File object, io.BytesIO as binary. You need to close it yourself.
                 for line in file:
                     if not isinstance(line, bytes):
                         line = line.encode('utf-8')
-                    if not skip_headers or b'Time' not in line:
+                    if (not skip_headers or i == 0) or b'Time' not in line:
                         o.write(line)
 
     return output
