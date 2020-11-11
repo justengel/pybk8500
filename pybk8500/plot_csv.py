@@ -118,7 +118,8 @@ def plot_csv_file(filename, title=None, xlabel=None, ylabel=None, legend=True, d
     return plots
 
 
-def plot_csv_files(*files, title=None, xlabel=None, ylabel=None, legend=True, delimiter=',', split=False, show=True):
+def plot_csv_files(*files, title=None, xlabel=None, ylabel=None, legend=True, inc_time=True,
+                   delimiter=',', split=False, show=True):
     """Plot the given csv files.
 
     Args:
@@ -127,6 +128,7 @@ def plot_csv_files(*files, title=None, xlabel=None, ylabel=None, legend=True, de
         xlabel (str)[None]: Plot X axis label
         ylabel (str)[None]: Plot Y axis label
         legend (bool)[True]: Show the legend.
+        inc_time (bool)[True]: If True adjust each file's timestamp to follow the previous file.
         delimiter (str)[',']: CSV Delimiter
         split (bool)[False]: If True Split each file and each section of data into a new plot.
         show (bool)[True]: If True show the plots (possibly blocking).
@@ -159,9 +161,16 @@ def plot_csv_files(*files, title=None, xlabel=None, ylabel=None, legend=True, de
                 folder = os.path.basename(os.path.dirname(os.path.abspath(file)))
             if header is None:
                 header = h
+
             if data is not None:
+                # Modify the time for the files.
+                if inc_time:
+                    last_time = data[-1, 0]
+                    for di in d:
+                        di[:, 0] += last_time
                 data = np.vstack([data] + d)
             else:
+                # Set the first set of data
                 data = np.vstack(d)
 
         # Create the plot
@@ -196,9 +205,10 @@ if __name__ == '__main__':
     P.add_argument('-x', '--xlabel', default=None, type=str, help='X Axis Label')
     P.add_argument('-y', '--ylabel', default=None, type=str, help='Y Axis Label')
     P.add_argument('-l', '--legend', default=True, type=bool, help='Show the plot legend.')
+    P.add_argument('-i', '--inc_time', default=True, type=bool, help='Increment the time column for the files to line up.')
     P.add_argument('-d', '--delimiter', default=',', type=str, help='Data separator (delimiter).')
     P.add_argument('-s', '--split', default=False, type=bool, help='Split each file into different lines.')
     ARGS = P.parse_args()
 
     main(*ARGS.filenames, title=ARGS.title, xlabel=ARGS.xlabel, ylabel=ARGS.ylabel, legend=ARGS.legend,
-         delimiter=ARGS.delimiter, split=ARGS.spit, show=True)
+         inc_time=ARGS.inc_time, delimiter=ARGS.delimiter, split=ARGS.spit, show=True)
