@@ -369,8 +369,8 @@ ProfileManager.register_internal_command('SetDTR', ProfileManager.set_dtr)
 ProfileManager.register_internal_command('SampleRate', ProfileManager.set_sample_rate)
 ProfileManager.register_internal_command('SampleTime', ProfileManager.set_sample_time)
 ProfileManager.register_internal_command('BaudRate', ProfileManager.set_baudrate)
-ProfileManager.register_internal_command('Com', ProfileManager.set_com)
-ProfileManager.register_internal_command('Port', ProfileManager.set_port)
+ProfileManager.register_internal_command('Com', ProfileManager.connect)
+ProfileManager.register_internal_command('Port', ProfileManager.connect)
 ProfileManager.register_internal_command('Output', ProfileManager.set_output)
 
 

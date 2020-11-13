@@ -40,10 +40,6 @@ class CommunicationManager(object):
             parser = self.Parser()
         if connection is None:
             connection = serial.Serial()
-            if com is not None:
-                connection.port = com
-            if baudrate is not None:
-                connection.baudrate = baudrate
             # connection.rts = True  # Documentation states needed. Did not work
             # connection.dtr = True  # Documentation states needed. Did not work
 
@@ -63,6 +59,10 @@ class CommunicationManager(object):
         self.ack_list = []
         self.response_types = []
         self.connection = connection
+        if baudrate is not None:
+            self.set_baudrate(baudrate)
+        if com is not None:
+            self.set_com(com)
         self.set_parser(parser)
 
     def get_parser(self):
@@ -138,14 +138,6 @@ class CommunicationManager(object):
         """Set the serial com port and try to connect."""
         with self.change_connection():
             self.connection.port = value
-
-        if not self.is_connected():
-            try:
-                self.connect()
-                if self._in_enter:
-                    self._enter_connected = True
-            except Exception as err:
-                print('Warning: Could not connect! {}'.format(err), file=sys.stderr)
 
     get_port = get_com
     set_port = set_com
