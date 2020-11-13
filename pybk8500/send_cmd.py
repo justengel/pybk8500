@@ -235,8 +235,9 @@ class CommunicationManager(object):
                 time.sleep(self.read_delay)
             else:
                 time.sleep(0.1)
-        except (ConnectionAbortedError, Exception) as err:
-            print(str(err), file=sys.stderr)
+        except (ConnectionAbortedError, SystemError, TimeoutError, RuntimeError, Exception) as err:
+            self.error(err)
+            # print(str(err), file=sys.stderr)
 
     @contextlib.contextmanager
     def listen_for_messages(self, *msg_types):
