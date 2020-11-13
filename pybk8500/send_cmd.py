@@ -291,6 +291,14 @@ class CommunicationManager(object):
 
         return wrapper
 
+    def has_msg_type(self, msg_type=None):
+        """Return True if the given msg_type is saved in the ack_list. If None is given return True if any
+        message is in the ack_list.
+        """
+        with self.ack_lock:
+            return (msg_type is None and len(self.ack_list) > 0) or \
+                   any(isinstance(msg, msg_type) for msg in self.ack_list)
+
     def wait_for_response(self, timeout, msg_type=None):
         """Wait for a response message and return True if a message was received.
 
@@ -302,13 +310,9 @@ class CommunicationManager(object):
             success (bool): True if a message was received within the timeout.
         """
         start = time.time()
-        while (time.time() - start) < timeout:
-            with self.ack_lock:
-                if (msg_type is None and len(self.ack_list) > 0) or \
-                        any(isinstance(msg, msg_type) for msg in self.ack_list):
-                    return True
+        while (time.time() - start) < timeout and not self.has_msg_type(msg_type):
             time.sleep(self.wait_delay)
-        return False
+        return self.has_msg_type(msg_type)
 
     def send_wait(self, msg, timeout=0, msg_type=None, attempts=3, print_msg=True, print_recv=None):
         """Send a message and wait for a response.
@@ -330,13 +334,13 @@ class CommunicationManager(object):
         with self.listen_for_messages(msg_type):
             trials = 0
             success = False
-            pout = 'Sending {} ...'.format(msg)
+            pout = 'Sending: {}'.format(msg)
             while (trials < attempts) and not success:
                 if print_msg:
                     print(pout)
-                self.write(bytes(msg))
+                self.write(msg)
                 success = self.wait_for_response(timeout, msg_type=msg_type)
-                pout = 'Retry sending {} ...'.format(msg)
+                pout = 'Sending (Retry): {}'.format(msg)
                 trials += 1
 
             if not success and timeout > 0:
@@ -345,6 +349,7 @@ class CommunicationManager(object):
         # Clear and return messages
         with self.ack_lock:
             msgs = list(pop_messages(self.ack_list, msg_type))
+            self.ack_list.clear()
 
         if print_recv:
             for msg in msgs:
