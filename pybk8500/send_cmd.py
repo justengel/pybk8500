@@ -31,7 +31,8 @@ def pop_messages(msg_list, msg_type=None):
 
 class CommunicationManager(object):
     Parser = Parser
-    DEFAULT_READ_SIZE = 26
+    read_rate = 1/30
+    read_size = 4096
 
     def __init__(self, connection=None, parser=None, com=None, baudrate=None, **kwargs):
         super().__init__()
@@ -48,9 +49,10 @@ class CommunicationManager(object):
         self._in_enter = False
         self._enter_started = False
         self._enter_connected = False
+        self.read_rate = self.__class__.read_rate
+        self.read_size = self.__class__.read_size
         self.read_delay = 0.0001
         self.wait_delay = 0.01
-        self.read_size = None  # Use in_waiting if None
 
         for k, v in kwargs.items():
             setattr(self, k, v)
@@ -187,6 +189,7 @@ class CommunicationManager(object):
         if not self.is_connected():
             self.flush()
             if isinstance(self.connection, serial.Serial):
+                self.connection.timeout = self.read_rate
                 self.connection.open()
 
     def disconnect(self, *args, **kwargs):
